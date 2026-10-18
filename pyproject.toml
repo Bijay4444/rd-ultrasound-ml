@@ -1,0 +1,11 @@
+[project]
+name = "rd-ultrasound-ml"
+version = "0.1.0"
+description = "CSCI 555 research on retinal detachment in ocular ultrasound"
+readme = "README.md"
+# Initialization floor, not a final ML compatibility decision.
+requires-python = ">=3.14"
+dependencies = []
+
+[tool.uv]
+package = false

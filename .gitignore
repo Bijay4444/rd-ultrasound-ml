@@ -1,0 +1,38 @@
+# Local environments and caches
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+build/
+dist/
+# Credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+# Research artifacts: keep acquisition instructions in docs
+data/*
+!data/.gitkeep
+checkpoints/
+models/
+*.ckpt
+*.pt
+*.pth
+*.joblib
+*.mp4
+*.avi
+*.mov
+*.zip
+*.tar
+*.gz
+logs/
+outputs/
+runs/
+wandb/
+.vscode/
+.idea/
+.DS_Store
