@@ -10,6 +10,11 @@ This is educational research; no clinical validation is claimed.
 
 ## Start here
 
+For the first implementation session, follow the [notebook guide](notebooks/README.md)
+and run the metadata exploration notebook one cell at a time. It supports a
+Colab kernel in VS Code and needs no GPU or upstream clone. After metadata
+exploration, audit the dataset splits before starting a model.
+
 1. Read [scope](docs/PROJECT_SCOPE.md) and [learning guide](docs/GETTING_STARTED.md).
 2. Follow the [weekly plan](docs/WEEKLY_PLAN.md); align dates with the actual course schedule.
 3. Review the paper and [upstream inspection](docs/UPSTREAM_ERDES_REVIEW.md).
