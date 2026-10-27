@@ -13,7 +13,13 @@ This is educational research; no clinical validation is claimed.
 For the first implementation session, follow the [notebook guide](notebooks/README.md)
 and run the metadata exploration notebook one cell at a time. It supports a
 Colab kernel in VS Code and needs no GPU or upstream clone. After metadata
-exploration, audit the dataset splits before starting a model.
+exploration, use the independent [split audit notebook](notebooks/split_audit.ipynb)
+to check the supplied partitions before starting a model.
+Then use [video_inspection.ipynb](notebooks/video_inspection.ipynb) to inspect eight
+training clips with recorded provenance and decoding checks.
+Next, [baseline_preparation.ipynb](notebooks/baseline_preparation.ipynb) checks
+the proposed fixed-size inputs for the [first GPU pilot](docs/BASELINE_PLAN.md).
+No model has been trained yet.
 
 1. Read [scope](docs/PROJECT_SCOPE.md) and [learning guide](docs/GETTING_STARTED.md).
 2. Follow the [weekly plan](docs/WEEKLY_PLAN.md); align dates with the actual course schedule.

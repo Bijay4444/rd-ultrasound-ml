@@ -2,6 +2,11 @@
 
 No experiments have been run. Copy this template for each run.
 
+Current preparation: [baseline_001 proposal](BASELINE_PLAN.md) and
+`configs/baseline_001.json` record the candidate GPU pilot. Input preparation
+passed on eight inspection clips, but no model was fitted and no validation/test
+metrics exist. Do not record preprocessing checks as classification results.
+
 ## Experiment ID
 
 TODO — evidence pending.
