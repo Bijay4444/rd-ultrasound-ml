@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 import cv2
 import numpy as np
@@ -65,6 +66,37 @@ class BaselinePreparationTests(unittest.TestCase):
         with TemporaryDirectory(prefix='erdes-missing-video-') as tmp:
             with self.assertRaises(FileNotFoundError):
                 self.functions['prepare_clip'](Path(tmp) / 'missing.mp4', 3)
+
+    def test_saturated_frame_stays_in_range_after_noninteger_area_resize(self):
+        result = self.functions['prepare_frame'](np.full((432, 432, 3), 255, dtype=np.uint8), 128)
+        self.assertEqual(result.dtype, np.float32)
+        self.assertTrue(np.isfinite(result).all())
+        self.assertGreaterEqual(result.min(), 0)
+        self.assertLessEqual(result.max(), 1)
+        np.testing.assert_allclose(result, 1, atol=1e-6)
+
+    def test_saturated_video_passes_the_strict_clip_range_check(self):
+        with TemporaryDirectory(prefix='erdes-saturated-video-') as tmp:
+            path = Path(tmp) / 'white_frames.avi'
+            writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*'MJPG'), 10, (432, 432))
+            self.assertTrue(writer.isOpened())
+            try:
+                for _ in range(2):
+                    writer.write(np.full((432, 432, 3), 255, dtype=np.uint8))
+            finally:
+                writer.release()
+            clip, _ = self.functions['prepare_clip'](path, 2)
+            self.assertEqual(clip.shape, (1, 16, 128, 128))
+            self.assertTrue(np.isfinite(clip).all())
+            self.assertGreaterEqual(clip.min(), 0)
+            self.assertLessEqual(clip.max(), 1)
+
+    def test_nonfinite_or_materially_out_of_range_resize_is_rejected(self):
+        frame = np.zeros((432, 432, 3), dtype=np.uint8)
+        for value in [np.nan, np.inf, 256.0, -1.0]:
+            with self.subTest(value=value), patch.object(cv2, 'resize', return_value=np.full((128, 128), value, dtype=np.float32)):
+                with self.assertRaisesRegex(ValueError, 'range|finite|bounds'):
+                    self.functions['prepare_frame'](frame, 128)
 
 
 if __name__ == '__main__':

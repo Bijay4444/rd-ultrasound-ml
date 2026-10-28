@@ -1,11 +1,12 @@
 # Retinal Detachment Analysis from Ocular Ultrasound Using Deep Learning
 
 CSCI 555 — Data Mining and Machine Learning, St. Francis Xavier University.
-Three-person group project. **Status: Week 1, research and setup.**
+Three-person group project. **Status: first GPU pilot complete; controlled comparisons.**
 
 We are learning to investigate retinal detachment using the ERDES (Eye Retinal
 DEtachment ultraSound) dataset. The final research question, architecture, and
-experimental design are still being refined. No experiments or results exist.
+experimental design are still being refined. The first small Colab pilot is complete;
+its selected model predicted every validation clip as non-RD at threshold 0.5.
 This is educational research; no clinical validation is claimed.
 
 ## Start here
@@ -19,7 +20,10 @@ Then use [video_inspection.ipynb](notebooks/video_inspection.ipynb) to inspect e
 training clips with recorded provenance and decoding checks.
 Next, [baseline_preparation.ipynb](notebooks/baseline_preparation.ipynb) checks
 the proposed fixed-size inputs for the [first GPU pilot](docs/BASELINE_PLAN.md).
-No model has been trained yet.
+The first five-epoch run in [baseline_training.ipynb](notebooks/baseline_training.ipynb)
+completed on a Colab T4. Preserve its results ZIP, then continue with sections
+10–12 in the same session: audit saved predictions and run the training-loss
+weighting comparison. See the [experiment log](docs/EXPERIMENT_LOG.md).
 
 1. Read [scope](docs/PROJECT_SCOPE.md) and [learning guide](docs/GETTING_STARTED.md).
 2. Follow the [weekly plan](docs/WEEKLY_PLAN.md); align dates with the actual course schedule.
@@ -28,7 +32,9 @@ No model has been trained yet.
 
 ## Environment
 
-Use uv; do not modify system Python. No ML dependencies are installed yet.
+Use uv; do not modify system Python. No ML dependencies are declared in the local project yet.
+The GPU notebook deliberately uses Colab's managed Python/CUDA PyTorch environment
+and records its versions; it does not install this local project or change its Python floor.
 The metadata floor is Python 3.14, supported by the current PyTorch wheel evidence;
 the final interpreter and ML dependency set remain open. See
 [setup sources](docs/research/setup-sources.md). No `.python-version` is pinned yet.
@@ -65,8 +71,8 @@ Never commit raw videos, checkpoints, credentials, or large outputs.
 
 ## Experiments and results
 
-Pending dataset audit and baseline design. Record runs using
-[the experiment template](docs/EXPERIMENT_LOG.md). Keep the final test set out of
+The initial audit and GPU pilot are recorded in
+[the experiment log](docs/EXPERIMENT_LOG.md). Keep the final test set out of
 model selection, threshold tuning, and calibration fitting.
 
 ## Citation and attribution
