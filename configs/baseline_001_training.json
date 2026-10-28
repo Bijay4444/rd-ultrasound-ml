@@ -1,0 +1,90 @@
+{
+  "experiment_id": "baseline_001_pilot",
+  "status": "implemented_not_run_on_gpu",
+  "task": "non_rd_vs_rd",
+  "label_mapping": {
+    "non_rd": 0,
+    "rd": 1
+  },
+  "seed": 42,
+  "split_policy": "preserve official train/val/test membership; no test use during development",
+  "preprocessing": {
+    "num_frames": 16,
+    "height": 128,
+    "width": 128,
+    "frame_sampling": "uniform frame indices using rint(linspace(0, N-1, T)); repeats for short clips",
+    "grayscale": "arithmetic channel mean",
+    "padding": "symmetric zero padding to square",
+    "resize": "OpenCV INTER_AREA",
+    "normalization": "divide by 255",
+    "layout": "B,C,T,H,W",
+    "dtype": "float32",
+    "augmentation": "none"
+  },
+  "model": {
+    "name": "compact_3d_cnn_from_scratch",
+    "channels": [
+      8,
+      16,
+      32
+    ],
+    "head": "global average pooling and one logit",
+    "pretrained": false,
+    "blocks": "Conv3d(kernel=3,stride=2,padding=1,bias=True), ReLU; repeated for each channel count",
+    "pool": "global mean over temporal and spatial dimensions",
+    "output": "Linear(32,1), no sigmoid"
+  },
+  "training": {
+    "device": "Colab CUDA GPU",
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "batch_size": 8,
+    "epochs": 5,
+    "loss": "unweighted BCEWithLogitsLoss",
+    "pilot_training_target": 256,
+    "validation": "all 431 supplied validation clips",
+    "pilot_selection": "deterministic proportional class sample within official training only; record manifest before fitting",
+    "pilot_class_counts": {
+      "0": 232,
+      "1": 24
+    },
+    "num_workers": 0,
+    "shuffle": true,
+    "precision": "float32",
+    "deterministic_algorithms": true
+  },
+  "evaluation": {
+    "positive_class": "rd",
+    "threshold": 0.5,
+    "checkpoint_selection": "highest validation average precision; earliest epoch on ties",
+    "metrics": [
+      "TP",
+      "TN",
+      "FP",
+      "FN",
+      "sensitivity",
+      "specificity",
+      "precision",
+      "F1",
+      "balanced_accuracy",
+      "average_precision",
+      "ROC_AUC",
+      "accuracy"
+    ],
+    "final_test": "reserved; no test loading, inference, tuning or checkpoint selection"
+  },
+  "limitations": [
+    "clip-level splits allow same-patient overlap; no unseen-patient generalization claim",
+    "eight inspection clips are not a training dataset or a metric estimate",
+    "pilot is not a reproduction of the paper or a final experiment"
+  ],
+  "preparation_config_sha256": "40753e7e9a4ba8bca86b445307a26c85e2087ac3740b93cf1525ae4d2fe7a1e1",
+  "diagnostics": {
+    "clips_per_class": 2,
+    "max_steps": 300,
+    "learning_rate": 0.003,
+    "loss_ratio_required": 0.5,
+    "training_accuracy_required": 1.0,
+    "selection": "first two per class in the ranked pilot manifest; training only"
+  }
+}
