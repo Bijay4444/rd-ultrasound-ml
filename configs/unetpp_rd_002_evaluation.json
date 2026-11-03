@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "unetpp_rd_002_test",
+  "frozen_at_utc": "2026-11-02T22:13:05.782088+00:00",
+  "training_experiment_id": "unetpp_rd_002_amp",
+  "training_source": "bijaykhadka1710/unetpp-rd-002-train-03",
+  "training_source_version": 1,
+  "training_epochs_completed": 50,
+  "selected_epoch": 48,
+  "selection_rule": "highest validation accuracy; earliest on ties",
+  "checkpoint_file": "best.pt",
+  "checkpoint_sha256": "c9dbbd79124dfcc692e7cf3a4a919eb3da7a9533153f9e3b5db39f9165123ca8",
+  "training_config_digest": "6907d5f903b39b83ca61ae2ab96a1f2b8b18078f3cab6d9ad614438597fb689f",
+  "training_data_fingerprint": "111e9cb7b1163c3be3b4a3dd2374f80434c402aad65168844cfcbb1087187ab0",
+  "training_implementation_sha256": {
+    "unetpp_baseline": "5180b7022ecd54f3319fa0d780a992c95fa404a5ce8dbae15766db24eef3c5ed",
+    "unetpp_training": "7bc8a073d45e08a4c6d24595508be65f9596dbc50500f6dc6799bdc23d7fe2e1",
+    "unetpp_data": "e6e186ed51bd5b33260e09b7b7b64caea23f28103bbdcd3749125b44c30feb61",
+    "unetpp_kaggle": "fc39badd5f9e20377e3c3052200bf188df8e9c98ccd6a5ef5a1278cf14c5013d"
+  },
+  "dataset_revision": "7867e2504ed3845a46ff7790a2f8c3ffcdc08947",
+  "task": "non_rd_vs_rd",
+  "positive_class": "rd",
+  "threshold": 0.5,
+  "precision": "16-mixed",
+  "physical_batch": 4,
+  "preprocessing": {
+    "num_frames": 96,
+    "height": 128,
+    "width": 128,
+    "grayscale": "arithmetic channel mean",
+    "padding": "symmetric zero padding to square",
+    "resize": "full time/spatial trilinear interpolation",
+    "align_corners": false,
+    "normalization": "divide by 255",
+    "dtype": "float32",
+    "layout": "B,C,D,H,W",
+    "frame_subsampling": false,
+    "augmentation": "none",
+    "roundoff_tolerance": 1e-06
+  },
+  "test_clips": 1077,
+  "test_label_counts": {
+    "0": 977,
+    "1": 100
+  },
+  "test_policy": "single fixed-checkpoint evaluation; no optimizer, threshold search, epoch selection or retraining",
+  "test_accessed_at_freeze": false,
+  "published_reference": {
+    "table": "8, Non-RD vs RD columns, UNet++ row",
+    "partition": "test",
+    "sensitivity": 0.879,
+    "specificity": 0.986,
+    "precision": 0.871,
+    "F1": 0.875,
+    "accuracy": 0.976,
+    "source": "author-reported, not our result"
+  },
+  "disclosures": [
+    "Paper says AdamW; released experiment resolves to Adam. This first attempt follows pinned code, not a silently reconciled paper protocol.",
+    "One-GPU gradient accumulation and current dependency versions must be reported as hardware/software adaptations.",
+    "Independent PyTorch blocks replace MONAI wrappers; verify parameter and numerical parity against the read-only reference.",
+    "OpenCV decoding replaces torchvision/PyAV; grayscale/interpolation parity is checked, but cross-version decoder identity is not guaranteed.",
+    "Only float32 roundoff within 1e-6 is clipped at normalization boundaries.",
+    "Paper recall decimals do not reconcile with a simple 100-positive test denominator; exact reported-table agreement is not guaranteed.",
+    "Official splits are clip-level with possible same-patient overlap; no unseen-patient or clinical-validation claim.",
+    "FP16 autocast with FP32 master parameters and GradScaler replaces reference FP32, after a real-input finite-gradient timing probe. This numerical adaptation is not bit-identical training.",
+    "Kaggle platform: two saved CPU-preparation outputs preserve all float32 inputs; GPU jobs attach them read-only.",
+    "Only CUDA device 0 is used, including on a T4 x2 allocation; this is not distributed training.",
+    "Training proceeds in saved bounded notebook jobs; completed prior output must be attached to continue."
+  ]
+}

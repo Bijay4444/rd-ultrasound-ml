@@ -9,9 +9,12 @@ Use one notebook for each focused stage:
 | 3 | [video_inspection.ipynb](video_inspection.ipynb) | Eight training clips: source hashes, decoding, frame previews, playback, and visual notes | `outputs/video_inspection/` |
 | 4 | [baseline_preparation.ipynb](baseline_preparation.ipynb) | Verify fixed-size inputs and save the proposed first GPU-pilot configuration | `outputs/baseline_preparation/` |
 | 5 | [baseline_training.ipynb](baseline_training.ipynb) | GPU/overfit checks, first pilot, prediction audit, and controlled weighted-loss comparison | `outputs/baseline_training/<run>/` |
+| 6 | [unetpp_resource_check.ipynb](unetpp_resource_check.ipynb) | One released UNet++ classifier at the paper's 96-frame input: GPU memory/runtime preflight | `outputs/unetpp_resource_check/<run>/` or the corresponding mounted Drive folder |
+| 7 | [unetpp_training.ipynb](unetpp_training.ipynb) | Full official train/validation inputs, mixed-precision check, fixed 50-epoch training with resume | `MyDrive/rd-ultrasound-ml/outputs/unetpp_training/unetpp_rd_001_amp/` |
 
-Each notebook runs independently from a fresh kernel and downloads its own small
-inputs when needed. The first four use a CPU runtime, with no PyTorch or upstream
+Each notebook runs independently from a fresh kernel and downloads its own
+inputs when needed. The UNet++ training stage prepares the full train/validation
+inputs; earlier stages use metadata or small video subsets. The first four use a CPU runtime, with no PyTorch or upstream
 clone required. The first two need no videos; the third downloads about 4.3 MB
 of selected training clips. The fifth requires a CUDA GPU and Colab's managed
 PyTorch environment. It downloads only its selected training/validation videos.
@@ -150,3 +153,78 @@ resolving dependencies. A local uv environment does not configure Colab.
    these continuation cells; automatic session restoration is not implemented.
 
 Reserve final test evaluation until model development is complete.
+
+## Next: one doable paper-baseline reproduction
+
+Both custom-CNN pilots are now complete. The weighted run improved validation
+AP to 0.145320 and ROC-AUC to 0.611061, while still missing all RD at threshold
+0.5. They do not reproduce the paper: their model, input length, training size,
+optimizer and epoch budget differ.
+
+The professor's clarified target is one manageable published reference before
+the new contribution. Open `unetpp_resource_check.ipynb` on the available
+Colab CUDA GPU and run it from the top. It is standalone; do not rerun the old
+baseline notebook to use it. It checks the released UNet++ classifier's full
+96×128×128 inputs with two hash-verified training clips and physical batches
+1/2/4. It saves to mounted Drive by default and records candidate accumulation
+for effective batch 48. No full research training or test evaluation occurs.
+
+The saved T4 check now passes batch 4 (6.54 GB allocated) with a 16.92-hour
+FP32 compute-only projection. Next open **`unetpp_training.ipynb`** on the same
+T4 and run from the top. Drive persistence is required and enabled. It checks
+mixed precision on two real training clips, then prepares all 3,873 training and
+431 validation inputs on runtime disk (about 27.08 GB). No 100-request cap or
+256-clip subsampling is imposed. No test CSV is opened.
+
+In section 6 leave `UNETPP_EPOCHS_THIS_SESSION = 1` for the first complete epoch.
+Then set it to `None` and rerun **section 6 only** to continue toward the fixed
+50-epoch target. Checkpoints save during each epoch and after validation, with
+optimizer/scheduler/scaler/RNG/cursor state. After a runtime reset, run this
+notebook from the top with the **same run name**: inputs are rebuilt on runtime
+disk and the run resumes from Drive. The old custom-pilot notebook has no such
+resume support; those earlier instructions apply only to that notebook.
+
+For a transient download error, rerun section 5 in the same runtime to reuse
+verified inputs. Do not delete videos, change official splits or reduce input
+size. An integrity/config/runtime mismatch stops explicitly and needs inspection.
+The optional export ZIP is saved beside the run folder in Google Drive, not on
+your Windows computer. Browser location: **My Drive → rd-ultrasound-ml → outputs
+→ unetpp_training**. A run stays labeled partial until 50 epochs complete.
+[Plan, source attribution and limitations](../docs/UNETPP_BASELINE_PLAN.md).
+
+
+## Kaggle alternative after Colab quota exhaustion
+
+Follow [the Kaggle setup guide](../docs/KAGGLE_GUIDE.md). From the VS Code WSL
+terminal run `bash scripts/setup_kaggle.sh` to configure your account/token
+locally and generate private submission bundles. This uses the official CLI
+for saved remote jobs; it does not attach an interactive Kaggle kernel in VS Code.
+
+`kaggle_unetpp_preparation.ipynb` runs as two separate **CPU** jobs (indices 0/1).
+Each saves half of the unchanged float32 inputs below the 20 GB per-notebook
+output limit. `kaggle_unetpp_training.ipynb` attaches both saved outputs, checks
+them and trains on GPU without repeating video acquisition/preprocessing.
+Start with one full epoch. Additional bounded jobs attach the preceding saved
+training output to resume the same fixed 50-epoch protocol. No Drive mount or
+final-test access is required. Saved output must finish successfully before it
+can be used to continue; an unsaved interrupted job can lose its current interval.
+
+
+## After 50 epochs: frozen official-test evaluation
+
+The Kaggle UNet++ run and official-test evaluation are complete. Epoch 48 and
+threshold 0.5 were frozen before evaluation-workflow test access; earlier
+split-integrity audits had read membership/counts.
+[Results and protocol](../docs/UNETPP_RESULTS.md).
+
+| Notebook | Accelerator | Purpose |
+| --- | --- | --- |
+| [kaggle_unetpp_test_preparation.ipynb](kaggle_unetpp_test_preparation.ipynb) | None; Internet enabled | Verify the final training artifact/freeze, then cache all 1,077 test clips |
+| [kaggle_unetpp_evaluation.ipynb](kaggle_unetpp_evaluation.ipynb) | GPU; Internet disabled | Verify frozen weights/test inputs, infer once and export official-test metrics |
+
+CPU test preparation and GPU evaluation version 1 both completed all 1,077 clips.
+The saved results have been downloaded and verified; do not launch another copy.
+The GPU evaluation bundle attaches the completed CPU test output and final
+training output by version. It has no training, threshold search, calibration
+fit or checkpoint selection. Its verified test accuracy is 97.49%, sensitivity
+86.00% and specificity 98.67%; the linked report contains the paper comparison.
