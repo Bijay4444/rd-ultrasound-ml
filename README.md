@@ -1,12 +1,12 @@
 # Retinal Detachment Analysis from Ocular Ultrasound Using Deep Learning
 
 CSCI 555 — Data Mining and Machine Learning, St. Francis Xavier University.
-Three-person group project. **Status: first GPU pilot complete; controlled comparisons.**
+Three-person group project. **Status: UNet++ completed 50 epochs and verified official-test evaluation: 97.49% accuracy, 86.00% RD sensitivity.**
 
 We are learning to investigate retinal detachment using the ERDES (Eye Retinal
 DEtachment ultraSound) dataset. The final research question, architecture, and
 experimental design are still being refined. The first small Colab pilot is complete;
-its selected model predicted every validation clip as non-RD at threshold 0.5.
+both custom-CNN variants predicted every validation clip as non-RD at threshold 0.5.
 This is educational research; no clinical validation is claimed.
 
 ## Start here
@@ -24,6 +24,13 @@ The first five-epoch run in [baseline_training.ipynb](notebooks/baseline_trainin
 completed on a Colab T4. Preserve its results ZIP, then continue with sections
 10–12 in the same session: audit saved predictions and run the training-loss
 weighting comparison. See the [experiment log](docs/EXPERIMENT_LOG.md).
+That comparison is complete in the user's saved notebook. The subsequent
+**UNet++ RD baseline aligned with the ERDES reference** completed its T4 resource
+check and all 50 epochs on Kaggle. Frozen epoch 48 was evaluated on all 1,077
+official test clips. See [verified test results and the paper comparison](docs/UNETPP_RESULTS.md),
+the [UNet++ experiment plan](docs/UNETPP_BASELINE_PLAN.md) and
+the [Kaggle guide](docs/KAGGLE_GUIDE.md). The next milestone is the progress
+presentation/report, followed by a separately planned controlled extension.
 
 1. Read [scope](docs/PROJECT_SCOPE.md) and [learning guide](docs/GETTING_STARTED.md).
 2. Follow the [weekly plan](docs/WEEKLY_PLAN.md); align dates with the actual course schedule.
