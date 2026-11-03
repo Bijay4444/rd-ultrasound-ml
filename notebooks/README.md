@@ -228,3 +228,14 @@ The GPU evaluation bundle attaches the completed CPU test output and final
 training output by version. It has no training, threshold search, calibration
 fit or checkpoint selection. Its verified test accuracy is 97.49%, sensitivity
 86.00% and specificity 98.67%; the linked report contains the paper comparison.
+
+
+## Completed results: CPU tables and figures
+
+Open [unetpp_results_analysis.ipynb](unetpp_results_analysis.ipynb) for the verified
+split tables, learning curves, confusion counts, ROC/precision–recall curves,
+score distributions, paper comparison and explicitly qualified uncertainty
+intervals. It reads saved archives and needs no GPU or raw videos. A ready-to-view
+executed copy is under `outputs/unetpp_analysis/`; figures export as PNG/PDF and
+tables as CSV. See [the reporting command](../docs/UNETPP_RESULTS.md#results-notebook-and-presentation)
+and [12-minute speaker guide](../docs/UNETPP_PRESENTATION_GUIDE.md).
