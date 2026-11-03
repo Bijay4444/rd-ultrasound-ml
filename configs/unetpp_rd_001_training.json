@@ -1,0 +1,112 @@
+{
+  "experiment_id": "unetpp_rd_001_amp",
+  "status": "training_protocol_not_a_result",
+  "scope": "one published UNet++ non-RD vs RD baseline; not all 40 benchmark runs",
+  "reference_article": "https://arxiv.org/html/2508.04735v2",
+  "upstream_revision": "4af67e0b9f4667edbae75a64a819884ee14d7a3b",
+  "reference_experiment": "https://github.com/OSUPCVLab/ERDES/blob/4af67e0b9f4667edbae75a64a819884ee14d7a3b/configs/experiment/non_rd_vs_rd/unetplusplus.yaml",
+  "dataset_revision": "7867e2504ed3845a46ff7790a2f8c3ffcdc08947",
+  "task": "non_rd_vs_rd",
+  "label_mapping": {
+    "non_rd": 0,
+    "rd": 1
+  },
+  "seed": 42,
+  "model": {
+    "name": "released_UNetPlusPlus_encoder_classifier_equivalent",
+    "features": [
+      32,
+      32,
+      64,
+      128,
+      256
+    ],
+    "convolutions_per_block": 2,
+    "conv": {
+      "kernel_size": 3,
+      "stride": 1,
+      "padding": 1,
+      "bias": true
+    },
+    "downsampling": "four MaxPool3d(kernel_size=2,stride=2)",
+    "normalization": "InstanceNorm3d(eps=1e-5,momentum=0.1,affine=True,track_running_stats=False)",
+    "activation": "LeakyReLU(negative_slope=0.1,inplace=True)",
+    "dropout": 0.0,
+    "head": "AdaptiveAvgPool3d(1), Linear(256,128), ReLU, Linear(128,1)",
+    "expected_parameter_count": 3603553,
+    "pretrained": false
+  },
+  "preprocessing": {
+    "num_frames": 96,
+    "height": 128,
+    "width": 128,
+    "grayscale": "arithmetic channel mean",
+    "padding": "symmetric zero padding to square",
+    "resize": "full time/spatial trilinear interpolation",
+    "align_corners": false,
+    "normalization": "divide by 255",
+    "dtype": "float32",
+    "layout": "B,C,D,H,W",
+    "frame_subsampling": false,
+    "augmentation": "none",
+    "roundoff_tolerance": 1e-06
+  },
+  "evaluation": {
+    "positive_class": "rd",
+    "threshold": 0.5,
+    "reference_test_clips": 1077,
+    "unetpp_metrics": [
+      "sensitivity",
+      "specificity",
+      "precision",
+      "F1",
+      "accuracy"
+    ],
+    "test_policy": "separate frozen-checkpoint evaluation after all 50 epochs; no test access in this notebook"
+  },
+  "published_reference": {
+    "table": "8, Non-RD vs RD columns, UNet++ row",
+    "partition": "test",
+    "sensitivity": 0.879,
+    "specificity": 0.986,
+    "precision": 0.871,
+    "F1": 0.875,
+    "accuracy": 0.976,
+    "source": "author-reported, not our result"
+  },
+  "disclosures": [
+    "Paper says AdamW; released experiment resolves to Adam. This first attempt follows pinned code, not a silently reconciled paper protocol.",
+    "One-GPU gradient accumulation and current dependency versions must be reported as hardware/software adaptations.",
+    "Independent PyTorch blocks replace MONAI wrappers; verify parameter and numerical parity against the read-only reference.",
+    "OpenCV decoding replaces torchvision/PyAV; grayscale/interpolation parity is checked, but cross-version decoder identity is not guaranteed.",
+    "Only float32 roundoff within 1e-6 is clipped at normalization boundaries.",
+    "Paper recall decimals do not reconcile with a simple 100-positive test denominator; exact reported-table agreement is not guaranteed.",
+    "Official splits are clip-level with possible same-patient overlap; no unseen-patient or clinical-validation claim.",
+    "FP16 autocast with FP32 master parameters and GradScaler replaces reference FP32, after a real-input finite-gradient timing probe. This numerical adaptation is not bit-identical training."
+  ],
+  "training": {
+    "train_clips": 3873,
+    "validation_clips": 431,
+    "epochs": 50,
+    "optimizer": "Adam",
+    "learning_rate": 1.5e-05,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "weight_decay": 0.0,
+    "scheduler": "ReduceLROnPlateau(mode=min,factor=0.1,patience=10)",
+    "scheduler_monitor": "validation_loss",
+    "loss": "unweighted BCEWithLogitsLoss",
+    "class_weighting": false,
+    "resampling": false,
+    "physical_batch": 4,
+    "gradient_accumulation": 12,
+    "precision": "16-mixed",
+    "deterministic_algorithms": false,
+    "checkpoint_selection": "highest validation accuracy; earliest on ties",
+    "effective_batch": 48,
+    "checkpoint_every_updates": 10
+  }
+}
