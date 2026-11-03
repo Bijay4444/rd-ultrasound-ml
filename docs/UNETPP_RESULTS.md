@@ -211,3 +211,35 @@ to Kaggle. The guarded CLI verified both required version-pinned inputs COMPLETE
 and submitted evaluation version 1. The saved job subsequently completed, its
 metadata retained the requested training image digest, and its recorded runtime
 matched training exactly. The verified official-test results appear above.
+
+
+## Results notebook and presentation
+
+[Results analysis notebook](../notebooks/unetpp_results_analysis.ipynb) is CPU-only
+and reads the two saved ZIPs. It verifies 70 training and 12 evaluation artifact
+hashes, recomputes test metrics, and exports seven figures (PNG/vector PDF), five
+CSV tables and a JSON audit. No torch, video downloads, training, test threshold
+search or new model selection is involved. Illustrative Wilson intervals assume
+independent clips and are explicitly not patient-clustered confidence intervals.
+Pilot metrics are transcribed from the earlier executed notebook and labeled as
+validation-only engineering evidence.
+
+To execute from the VS Code terminal without changing project dependency metadata:
+
+```bash
+uv --cache-dir outputs/.report-uv-cache run --no-project --with pandas --with numpy --with matplotlib --with scikit-learn --with nbformat --with nbclient --with ipykernel python scripts/run_unetpp_results_analysis.py
+```
+
+Open `outputs/unetpp_analysis/unetpp_results_analysis_executed.ipynb` to see the
+already executed figures and tables. The clean source notebook can also run in a
+local VS Code kernel with those reporting dependencies. Retain the two saved
+result ZIPs in the paths specified above; no GPU connection is needed.
+
+The new Google Slides presentation is linked in the
+[12-minute speaker guide](UNETPP_PRESENTATION_GUIDE.md). It contains 13 timed
+main slides, a brief recap grounded in the previous team presentation, current
+results and two appendix slides. All notes survived native Google Slides import.
+The generator is `scripts/build_unetpp_progress_deck.py`; run it after generating
+figures, using `uv run --no-project --with python-pptx --with pillow python
+scripts/build_unetpp_progress_deck.py`. Local PPTX and slide previews live under
+ignored `outputs/presentation/unetpp_progress/`.
