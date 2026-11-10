@@ -1,13 +1,22 @@
-# Teammate B: R(2+1)D-18 RD video classification
+# Teammate 1: R(2+1)D-18 RD video classification
 
 Status: assignment and implementation brief, 2026-11-10; no new model implemented
 or trained by this document. Read the [shared protocol](../MODEL_COMPARISON_PLAN.md)
 first; it owns data, optimization, cache integration, evaluation and reporting rules.
 
+## Why this assignment
+
+Bijay requested the more involved model for the first teammate. R(2+1)D-18 has
+a factorized spatial/temporal stem and intermediate activations that require
+careful adaptation and resource checks. R3D-18 has a simpler joint-convolution
+stem. This makes R(2+1)D-18 the more involved implementation in our judgment;
+actual relative training time, memory and convergence remain unmeasured.
+Both have ready-made torchvision builders, so neither needs building from scratch.
+
 ## Goal
 
 Train a one-channel torchvision **R(2+1)D-18** classifier from scratch on ERDES
-`non_rd_vs_rd`. Compared with teammate A's R3D-18, this architecture factorizes
+`non_rd_vs_rd`. Compared with teammate 2's R3D-18, this architecture factorizes
 3D convolutions into spatial and temporal operations with an intervening
 nonlinearity. It supplies a second video-learning approach while retaining the
 same prepared tensors and training recipe. It is a new comparison, not an ERDES
@@ -38,7 +47,7 @@ paper-row reproduction or a guaranteed improvement.
    and builders. Completion: synthetic integration validates unchanged cached
    inputs under the new run identity and rejects modified provenance/configs.
 5. Probe real training clips and complete one full timing epoch. Coordinate the
-   same physical batch with teammate A before starting the final run. Factorized
+   same physical batch with teammate 2 before starting the final run. Factorized
    convolutions add intermediate activations; **do not assume this model is
    faster or uses less memory**. Start fresh weights/seed 42 for the 50-epoch
    experiment and preserve resumable state. Record a partial run honestly if the
@@ -72,22 +81,109 @@ predictions. The full-data result is either 50 epochs or explicitly partial.
 All experimental deviations appear in the report. No model/threshold choice
 uses a new test score.
 
-## Paste into Claude from the repository root
+## What Bijay should share
+
+Send the repository URL, this handoff and the Claude prompt below. The teammate
+must have the repository files, not just the prompt:
+
+- Repository: <https://github.com/Bijay4444/rd-ultrasound-ml>.
+- Required context: this file, `AGENTS.md`, `docs/MODEL_COMPARISON_PLAN.md`,
+  `docs/UNETPP_RESULTS.md`, `docs/research/video-model-comparison-sources.md`,
+  `configs/unetpp_rd_002_training.json` and `docs/KAGGLE_GUIDE.md`.
+- Implementation context: the repository's `src/`, `scripts/`, `tests/` and
+  `notebooks/` directories. Claude should inspect these in the checkout.
+- Data access: the two exact private Kaggle preparation-output source/version
+  identifiers and appropriate access, if sharing existing inputs. Otherwise
+  follow `docs/DATA_ACCESS.md` to prepare the identical release independently.
+  Local documentation alone does not grant access to private Kaggle outputs.
+
+Share the updated files as attachments or make them available through the team's
+normal Git workflow before asking him to read them. This handoff update does not
+itself commit or push anything. Use each person's own credentials; exchange no
+API tokens. The first useful check-in is a passed model/input check plus a real
+GPU memory probe and one full-epoch timing, preferably within the first day.
+
+## WhatsApp message to copy
 
 ```text
-Read AGENTS.md, docs/MODEL_COMPARISON_PLAN.md and docs/handoffs/R2PLUS1D18.md.
-Implement my assigned R(2+1)D-18 RD video classifier and model-specific training
-workflow. Inspect existing code/tests, propose a short plan, then implement and
-verify small changes. Keep the completed U-Net++ source/configs/results intact.
-Use torchvision r2plus1d_18(weights=None, num_classes=1), adapt only the first
-stem convolution for grayscale, preserve the factorized temporal stem, and
-return one raw logit per clip. Retain the official splits and inherited recipe.
-Handle the existing cache config digest explicitly while preserving provenance
-checks. Prepare the notebook, config, focused checks and report template; run
-real-input memory/timing probes before full training. Coordinate physical batch
-with the R3D-18 owner. Train when intended GPU/data access is available within
-the recorded budget; complete independent implementation if access is missing.
-Return the shared protocol's artifact package and exact blockers/deviations.
-Freeze final experiment choices before separate official-test inference, disclose
-benchmark reuse, and never invent results or call a partial run complete.
+Hey, please take R(2+1)D-18 for our final milestone model comparison. It is the
+more involved of the two implementations; the other teammate will take R3D-18.
+I'll handle augmentation and explainability.
+
+Repo: https://github.com/Bijay4444/rd-ultrasound-ml
+
+I'm sending the model handoff and a Claude prompt. Open the repo in Claude Code
+and give it the prompt. Keep the same ERDES splits and video preprocessing as
+our U-Net++ run, and train your first model without augmentation so we can compare.
+
+Please aim to send me the GPU memory check and one full-epoch timing within a
+day, then continue toward 50 epochs if the budget fits. For the final handoff,
+send the notebook/code, config, best checkpoint, training curves, validation
+predictions and metrics, plus runtime details. Keep test evaluation separate
+until we've frozen the experiments together. I'll coordinate the prepared-data
+access. Send me any access or compute blockers early.
 ```
+
+## Claude implementation prompt to copy
+
+Paste this into Claude Code with the repository open at its root. In a chat-only
+session, attach the required context and relevant code files; a chat without
+repository or execution access cannot perform training itself.
+
+```text
+I am teammate 1 on the CSCI 555 ERDES retinal-detachment video-classification
+project. Implement and, when GPU/data access permits, train our R(2+1)D-18
+comparison model. We have roughly one week. Bijay owns augmentation and
+explainability; another teammate owns R3D-18.
+
+First read AGENTS.md, docs/MODEL_COMPARISON_PLAN.md,
+docs/handoffs/R2PLUS1D18.md, docs/UNETPP_RESULTS.md,
+docs/research/video-model-comparison-sources.md, and
+configs/unetpp_rd_002_training.json. Inspect existing source, tests, Kaggle
+notebooks and submission scripts before making changes. Propose a short plan,
+then implement in small checkable steps on feature/r2plus1d18-rd.
+
+Our completed U-Net++ is a 3D encoder video classifier, not segmentation. Use
+torchvision.models.video.r2plus1d_18(weights=None, num_classes=1), changing only
+the first stem convolution's input channels from 3 to 1 and initializing that
+replacement consistently with the builder. Preserve its later temporal stem.
+Input is [B,1,96,128,128], grayscale in [0,1]; output one raw RD logit per clip.
+Use original official splits: 3,873 training and 431 validation clips. RD=1.
+
+For the first comparison inherit the recorded recipe: seed 42, 50 epochs,
+Adam at 1.5e-5, unweighted BCEWithLogitsLoss, ReduceLROnPlateau and effective
+batch 48. No pretrained weights, augmentation, class resampling or weighting.
+Retain threshold 0.5 and highest-validation-accuracy checkpoint selection,
+earliest ties. Follow the shared protocol for full optimizer/scheduler defaults.
+
+Reuse existing training code where appropriate. The cache loader currently
+checks the entire U-Net++ config digest: handle preparation identity separately
+from the new training identity while retaining source/tensor hash, label,
+partition/order and preprocessing checks. Keep original data, source snapshots,
+configs, notebooks and result artifacts intact. Use new config/output names.
+Use uv locally; record the GPU runtime including torch and torchvision versions.
+
+Verify model shape, finite gradients, cache validation and checkpoint reload.
+Run a disposable real-training-input GPU memory/precision probe, coordinate
+physical batch with the R3D-18 owner, and time one full epoch before committing
+to the full run. Discard probe weights and start final training from the fixed
+seed. Record BatchNorm/physical-batch limitations and preserve complete resume
+state. If access is missing, finish independent code/checks and report exactly
+what is missing. Never invent execution results or silently shorten the recipe.
+
+Return model-specific code, config, standalone training notebook/submission
+workflow, tests/checks actually run, docs/R2PLUS1D18_RESULTS.md, per-epoch curves,
+selected-checkpoint identity, per-clip validation predictions and metrics,
+parameter count, runtime/memory measurements, and private artifact locations.
+Expose the exact final feature-layer path for Bijay's Grad-CAM integration.
+Report actual epochs, failures and deviations. Keep new test inference separate
+until the team freezes all final choices; the official test was already exposed
+and any later evaluation must be disclosed as benchmark reuse.
+```
+
+## Reference links to send
+
+1. [Torchvision R(2+1)D-18 builder](https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.video.r2plus1d_18.html): supported constructor and pretrained-weight distinction.
+2. [Official VideoResNet source](https://docs.pytorch.org/vision/stable/_modules/torchvision/models/video/resnet.html): factorized stem, blocks, initialization and classifier head.
+3. [Tran et al., A Closer Look at Spatiotemporal Convolutions for Action Recognition](https://arxiv.org/abs/1711.11248): model rationale; results on other datasets are not ERDES guarantees.
+4. [ERDES paper v2](https://arxiv.org/html/2508.04735v2): dataset/task and benchmark context; this new model is not an exact reproduction of a named Table 8 row.

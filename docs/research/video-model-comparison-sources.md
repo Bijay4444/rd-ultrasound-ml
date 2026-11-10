@@ -23,8 +23,8 @@ not an experimentally established ranking. [Tran et al., CVPR 2018](https://arxi
 
 | Candidate | Role | Official stock parameter count | Stock reported GFLOPS |
 | --- | --- | ---: | ---: |
-| [R3D-18](https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.video.r3d_18.html) | Peer 1; joint 3D residual baseline | 33,371,472 | 40.70 |
-| [R(2+1)D-18](https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.video.r2plus1d_18.html) | Peer 2; factorized residual baseline | 31,505,325 | 40.52 |
+| [R3D-18](https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.video.r3d_18.html) | Peer 2; joint 3D residual baseline | 33,371,472 | 40.70 |
+| [R(2+1)D-18](https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.video.r2plus1d_18.html) | Peer 1; factorized residual baseline | 31,505,325 | 40.52 |
 | [MC3-18](https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.video.mc3_18.html) | Optional mixed-convolution alternative | 11,695,440 | 43.34 |
 
 These are official stock RGB/400-class metadata, **not measurements at our
