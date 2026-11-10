@@ -10,8 +10,8 @@ this extension; the completed baseline remains preserved.
 
 | Owner | Work | Question answered |
 | --- | --- | --- |
-| Teammate A | [R3D-18 classifier](handoffs/R3D18.md), no augmentation | How does a standard residual 3D video classifier compare under our existing protocol? |
-| Teammate B | [R(2+1)D-18 classifier](handoffs/R2PLUS1D18.md), no augmentation | How does factorizing spatial and temporal convolutions change the outcome? |
+| Teammate 1 | [R(2+1)D-18 classifier](handoffs/R2PLUS1D18.md), no augmentation | How does factorizing spatial and temporal convolutions change the outcome? |
+| Teammate 2 | [R3D-18 classifier](handoffs/R3D18.md), no augmentation | How does a standard residual 3D video classifier compare under our existing protocol? |
 | Bijay | [U-Net++ augmentation ablation and explanations](AUGMENTATION_EXPLAINABILITY_PLAN.md) | Does training-only augmentation change performance, and which inputs influence the RD score? |
 
 These choices reuse the existing video tensors and an established torchvision
@@ -19,6 +19,12 @@ model API. R3D uses joint 3D convolutions; R(2+1)D factorizes them into spatial
 and temporal operations with an intervening nonlinearity. This gives a specific
 architecture question, rather than just a longer list of model names.
 [Primary sources and implementation details](research/video-model-comparison-sources.md).
+
+Assignment updated at the user's request: teammate 1 receives the more involved
+implementation, R(2+1)D-18. Its factorized stem and intermediate feature maps need
+additional care during grayscale adaptation and memory checks. This is an
+implementation judgment, not a measured claim about which model trains slower
+or converges less readily.
 
 **Both are feasibility recommendations, not predicted winners.** Both are larger
 than our 3.60M-parameter baseline; factorization does not guarantee faster training
@@ -209,7 +215,7 @@ conflicts. Return a concise model report and a private artifact location with:
 
 ## One-week sequence
 
-| Day | Teammates A and B | Bijay |
+| Day | Teammates 1 and 2 | Bijay |
 | --- | --- | --- |
 | 1 | Read handoffs; implement adapters; shape/gradient/cache checks and GPU probe | Lock protocol; check cache access; inspect training-only augmentation examples |
 | 2 | Complete first full epoch, measure total budget, start bounded full runs | Start U-Net++ + augmentation from scratch; implement baseline Grad-CAM |
