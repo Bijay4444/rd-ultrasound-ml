@@ -82,6 +82,15 @@ The initial audit and GPU pilot are recorded in
 [the experiment log](docs/EXPERIMENT_LOG.md). Keep the final test set out of
 model selection, threshold tuning, and calibration fitting.
 
+For the final milestone extension, start with the
+[model comparison and one-week team plan](docs/MODEL_COMPARISON_PLAN.md).
+Teammate assignments and paste-ready Claude prompts are in the
+[R3D-18 handoff](docs/handoffs/R3D18.md) and
+[R(2+1)D-18 handoff](docs/handoffs/R2PLUS1D18.md).
+Bijay's work is described in the
+[augmentation and explainability plan](docs/AUGMENTATION_EXPLAINABILITY_PLAN.md).
+These documents propose new work; only the existing U-Net++ result is complete.
+
 ## Citation and attribution
 
 Dataset and reference implementation: [ERDES](https://github.com/OSUPCVLab/ERDES).
