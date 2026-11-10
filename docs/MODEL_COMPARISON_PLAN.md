@@ -59,7 +59,18 @@ reproduction of that published ResNet row.
 
 Every teammate needs this repository at the same starting revision, including
 `src/`, `configs/`, `scripts/`, `tests/`, and notebooks. Sending just a handoff
-without its linked files is insufficient. Read in this order:
+without its linked files is insufficient. Start from **`dev`**, which contains
+the comparison handoffs; the default `main` branch is older. For a fresh checkout:
+
+```bash
+git clone --branch dev https://github.com/Bijay4444/rd-ultrasound-ml.git
+cd rd-ultrasound-ml
+```
+
+Create the assigned model's feature branch from that checkout and record its
+starting commit. For an existing checkout, preserve local work and update `dev`
+through the team's normal Git workflow before creating the feature branch.
+Read in this order:
 
 1. `AGENTS.md`, then this document and the assigned handoff.
 2. `docs/UNETPP_RESULTS.md` and `configs/unetpp_rd_002_training.json` for the

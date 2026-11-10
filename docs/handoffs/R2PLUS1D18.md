@@ -86,7 +86,15 @@ uses a new test score.
 Send the repository URL, this handoff and the Claude prompt below. The teammate
 must have the repository files, not just the prompt:
 
-- Repository: <https://github.com/Bijay4444/rd-ultrasound-ml>.
+- Repository branch: <https://github.com/Bijay4444/rd-ultrasound-ml/tree/dev>.
+  Start from `dev`, not the older default `main` branch. Fresh checkout:
+
+  ```bash
+  git clone --branch dev https://github.com/Bijay4444/rd-ultrasound-ml.git
+  cd rd-ultrasound-ml
+  git switch -c feature/r2plus1d18-rd
+  ```
+
 - Required context: this file, `AGENTS.md`, `docs/MODEL_COMPARISON_PLAN.md`,
   `docs/UNETPP_RESULTS.md`, `docs/research/video-model-comparison-sources.md`,
   `configs/unetpp_rd_002_training.json` and `docs/KAGGLE_GUIDE.md`.
@@ -96,6 +104,9 @@ must have the repository files, not just the prompt:
   identifiers and appropriate access, if sharing existing inputs. Otherwise
   follow `docs/DATA_ACCESS.md` to prepare the identical release independently.
   Local documentation alone does not grant access to private Kaggle outputs.
+
+The [dev readiness audit](DEV_READINESS_AUDIT.md) distinguishes verified repository
+contents from external requirements and the model-specific files you will create.
 
 Share the updated files as attachments or make them available through the team's
 normal Git workflow before asking him to read them. This handoff update does not
@@ -110,7 +121,8 @@ Hey, please take R(2+1)D-18 for our final milestone model comparison. It is the
 more involved of the two implementations; the other teammate will take R3D-18.
 I'll handle augmentation and explainability.
 
-Repo: https://github.com/Bijay4444/rd-ultrasound-ml
+Repo: https://github.com/Bijay4444/rd-ultrasound-ml/tree/dev
+Please start from the dev branch; main is older.
 
 I'm sending the model handoff and a Claude prompt. Open the repo in Claude Code
 and give it the prompt. Keep the same ERDES splits and video preprocessing as
@@ -135,6 +147,9 @@ I am teammate 1 on the CSCI 555 ERDES retinal-detachment video-classification
 project. Implement and, when GPU/data access permits, train our R(2+1)D-18
 comparison model. We have roughly one week. Bijay owns augmentation and
 explainability; another teammate owns R3D-18.
+
+Start from the repository's dev branch, then create feature/r2plus1d18-rd.
+If the checkout has local changes, preserve them before switching branches.
 
 First read AGENTS.md, docs/MODEL_COMPARISON_PLAN.md,
 docs/handoffs/R2PLUS1D18.md, docs/UNETPP_RESULTS.md,
