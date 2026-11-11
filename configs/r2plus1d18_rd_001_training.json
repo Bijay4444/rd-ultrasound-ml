@@ -1,0 +1,133 @@
+{
+  "experiment_id": "r2plus1d18_rd_001_amp",
+  "status": "training_protocol_not_a_result",
+  "scope": "one torchvision R(2+1)D-18 non-RD vs RD comparison under the inherited U-Net++ recipe; not an ERDES paper-row reproduction",
+  "comparison_reference": "unetpp_rd_002_amp",
+  "protocol": "docs/MODEL_COMPARISON_PLAN.md; docs/handoffs/R2PLUS1D18.md",
+  "architecture_reference": "https://arxiv.org/abs/1711.11248",
+  "dataset_revision": "7867e2504ed3845a46ff7790a2f8c3ffcdc08947",
+  "task": "non_rd_vs_rd",
+  "label_mapping": {
+    "non_rd": 0,
+    "rd": 1
+  },
+  "seed": 42,
+  "model": {
+    "name": "torchvision_r2plus1d_18_grayscale_binary",
+    "builder": "torchvision.models.video.r2plus1d_18(weights=None, num_classes=1)",
+    "pretrained": false,
+    "stem_replacement": {
+      "in_channels": 1,
+      "out_channels": 45,
+      "kernel_size": [
+        1,
+        7,
+        7
+      ],
+      "stride": [
+        1,
+        2,
+        2
+      ],
+      "padding": [
+        0,
+        3,
+        3
+      ],
+      "bias": false
+    },
+    "stem": [
+      "Conv3d(1, 45, kernel_size=(1, 7, 7), stride=(1, 2, 2), padding=(0, 3, 3), bias=False)",
+      "BatchNorm3d(45, eps=1e-05, momentum=0.1, affine=True, bias=True, track_running_stats=True)",
+      "ReLU(inplace=True)",
+      "Conv3d(45, 64, kernel_size=(3, 1, 1), stride=(1, 1, 1), padding=(1, 0, 0), bias=False)",
+      "BatchNorm3d(64, eps=1e-05, momentum=0.1, affine=True, bias=True, track_running_stats=True)",
+      "ReLU(inplace=True)"
+    ],
+    "initialization": "builder defaults for all modules; replacement stem[0] uses kaiming_normal_(mode='fan_out', nonlinearity='relu'), the builder's Conv3d rule. fan_out (45*1*7*7) does not depend on input channels, so the replacement uses the same initialization distribution as the stock first convolution",
+    "normalization": "BatchNorm3d builder defaults (eps=1e-5, momentum=0.1, track_running_stats=True)",
+    "head": "AdaptiveAvgPool3d(1), flatten, Linear(512,1); squeeze to [B] raw logits",
+    "gradcam_layer": "backbone.layer4",
+    "expected_parameter_count": 31296228,
+    "stock_parameter_count_rgb_400_class": 31505325,
+    "version_note": "installed torch/torchvision versions are recorded in runtime.json; parameter count verified with torchvision 0.29.2"
+  },
+  "preprocessing": {
+    "num_frames": 96,
+    "height": 128,
+    "width": 128,
+    "grayscale": "arithmetic channel mean",
+    "padding": "symmetric zero padding to square",
+    "resize": "full time/spatial trilinear interpolation",
+    "align_corners": false,
+    "normalization": "divide by 255",
+    "dtype": "float32",
+    "layout": "B,C,D,H,W",
+    "frame_subsampling": false,
+    "augmentation": "none",
+    "roundoff_tolerance": 1e-06
+  },
+  "evaluation": {
+    "positive_class": "rd",
+    "threshold": 0.5,
+    "test_policy": "no test access in training; new official-test inference only after the team freezes all choices, disclosed as reused official benchmark",
+    "metrics": [
+      "TP",
+      "TN",
+      "FP",
+      "FN",
+      "sensitivity",
+      "specificity",
+      "precision",
+      "F1",
+      "accuracy",
+      "balanced_accuracy",
+      "average_precision",
+      "ROC_AUC"
+    ]
+  },
+  "cache": {
+    "preparation_experiment_id": "unetpp_rd_002_amp",
+    "preparation_config_digest": "6907d5f903b39b83ca61ae2ab96a1f2b8b18078f3cab6d9ad614438597fb689f",
+    "expected_cache_fingerprint": "111e9cb7b1163c3be3b4a3dd2374f80434c402aad65168844cfcbb1087187ab0",
+    "reuse": "attached read-only U-Net++ CPU preparation outputs validated by rd_ultrasound_ml.video_cache.load_cache_for_run",
+    "pin_evidence": "digest recomputed from the tracked kaggle_unetpp_preparation notebook config plus embedded-module SHA256s; equals training_config_digest and training_data_fingerprint in configs/unetpp_rd_002_evaluation.json"
+  },
+  "training": {
+    "train_clips": 3873,
+    "validation_clips": 431,
+    "epochs": 50,
+    "optimizer": "Adam",
+    "learning_rate": 1.5e-05,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "weight_decay": 0.0,
+    "scheduler": "ReduceLROnPlateau(mode=min,factor=0.1,patience=10)",
+    "scheduler_monitor": "validation_loss",
+    "loss": "unweighted BCEWithLogitsLoss",
+    "class_weighting": false,
+    "resampling": false,
+    "physical_batch": 4,
+    "gradient_accumulation": 12,
+    "precision": "16-mixed",
+    "deterministic_algorithms": false,
+    "checkpoint_selection": "highest validation accuracy; earliest on ties",
+    "effective_batch": 48,
+    "checkpoint_every_updates": 10,
+    "normalization_note": "BatchNorm3d sees each physical batch only; gradient accumulation does not make BatchNorm observe 48 clips"
+  },
+  "disclosures": [
+    "Architecture comparison under the inherited U-Net++ recipe (Adam 1.5e-5, 50 epochs); not this architecture's tuned best performance. The small learning rate may disadvantage R(2+1)D-18.",
+    "torchvision R(2+1)D-18 is not a named ERDES Table 8 row; no paper reproduction is claimed.",
+    "Only stem[0] input channels change (3 to 1); weights=None, no Kinetics transforms, no pretrained weights.",
+    "Model uses BatchNorm3d (U-Net++ used InstanceNorm3d); with physical batch 4 BatchNorm statistics use 4 clips per forward pass. Not a normalization-controlled ablation.",
+    "FP16 autocast with FP32 master parameters and GradScaler, after a real-input finite-gradient probe; not bit-identical FP32 training.",
+    "Inputs reuse the verified U-Net++ float32 cache; the preparation identity is pinned separately from this training identity.",
+    "Official splits are clip-level with possible same-patient overlap; one seed; no unseen-patient or clinical-validation claim.",
+    "Only CUDA device 0 is used; bounded resumable Kaggle jobs; the official test set was already exposed at project level."
+  ],
+  "platform": "kaggle"
+}
