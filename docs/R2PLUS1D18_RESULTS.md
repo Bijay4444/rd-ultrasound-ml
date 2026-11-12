@@ -217,6 +217,28 @@ From `history.csv` of `-train-04` (rows 1–41 identical to earlier sessions). S
 
 Validation sensitivity is unstable across epochs (0.300–0.950 from epoch 4 on; 0.300 at epoch 23) with only 40 RD clips; one clip moves sensitivity by 0.025. Epoch 15 was selected on this same validation split, so its metrics are optimistically biased as an estimate of performance on new data; after the learning-rate drops (epochs 27–50) accuracy stayed in 0.977–0.988 and sensitivity in 0.750–0.900.
 
+### Errors of the selected checkpoint (epoch 15, validation, threshold 0.5)
+
+From `best_validation_predictions.csv` (`-train-04`). Labels: 1 = RD, 0 = non-RD.
+
+| Clip | Dataset label | Predicted | RD probability | Error |
+| --- | --- | --- | --- | --- |
+| 825315_00096 | 0 | 1 | 0.6220 | false positive |
+| 825315_00102 | 0 | 1 | 0.6091 | false positive |
+| 755384_00001 | 1 | 0 | 0.1300 | false negative |
+| 102769_00005 | 1 | 0 | 0.0795 | false negative |
+
+Observations (not yet explained):
+- Both false positives are just above the 0.5 threshold and share the clip-ID prefix `825315`, so they may come
+  from the same source recording; they are probably not independent errors.
+- Both false negatives are confident misses (probability ≤ 0.13); lowering the threshold enough to catch them
+  would add many false positives.
+- These clips must **not** be added to training: they belong to the validation split used for checkpoint
+  selection and reporting, so training on them would leak and inflate the reported metrics.
+- Suggested follow-up: Grad-CAM (`backbone.layer4`, epoch-15 `best.pt`) on these four clips. Augmentation,
+  class weighting or threshold changes would be a new, separately labelled run agreed by the team, with
+  threshold choices made on validation and the result reported on test.
+
 Reference for later comparison (U-Net++ epoch 48, **validation**): accuracy 0.988399,
 sensitivity 0.925000. No test inference is planned until the team freezes all choices;
 any later test result must be labelled **reused official benchmark**.
