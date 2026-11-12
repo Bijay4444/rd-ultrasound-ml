@@ -1,10 +1,12 @@
 # R(2+1)D-18 RD comparison: `r2plus1d18_rd_001_amp`
 
-Updated 2026-11-11. **Status: 41 of 50 epochs complete (GPU sessions 1–3 on Kaggle Tesla T4:
-`namanbabariya/r2plus1d18-rd-001-train-01` epoch 1, `-train-02` epochs 2–21, `-train-03` epochs 22–41).
-The run is partial; the numbers below are not the model's final result.** Versions 1 and 2 of `-train-01`
-were allocated no GPU and stopped at the CUDA check before reading data; the successful session 1 was
-started from the Kaggle editor with GPU T4 selected. Sessions 2 and 3 were pushed from the CLI and got the T4.
+Updated 2026-11-12. **Status: training complete, 50 of 50 epochs (`run_status.json` status `completed`),
+on Kaggle Tesla T4 over four sessions: `namanbabariya/r2plus1d18-rd-001-train-01` epoch 1, `-train-02` epochs
+2–21, `-train-03` epochs 22–41, `-train-04` epochs 42–50. Selected checkpoint: epoch 15. All metrics here are
+on the official validation split, which was also used for checkpoint selection; no test inference has been
+run.** Versions 1 and 2 of `-train-01` were allocated no GPU and stopped at the CUDA check before reading
+data; the successful session 1 was started from the Kaggle editor with GPU T4 selected. Sessions 2–4 were
+pushed from the CLI and got the T4.
 Every cell below marked `pending` is unmeasured. This document must be
 updated from saved Kaggle logs only. See the [shared protocol](MODEL_COMPARISON_PLAN.md)
 and [assignment](handoffs/R2PLUS1D18.md).
@@ -143,21 +145,22 @@ the cache record, and `artifact_sha256.json`.
 | Precision probe | physical batch 4, 16-mixed: passed; median step 1.37 s; peak allocated 8.38 GB, reserved 9.64 GB; finite nonzero gradients; 0 skipped updates. Batch 4 fits, so the inherited 4 × 12 is kept. |
 | First full epoch wall time | 1,788.7 s (≈29.8 min) including 84.7 s validation; epoch peak allocated 8.51 GB, reserved 9.57 GB |
 | Session overhead | whole session 2,669 s; ≈12 min of it is the per-clip cache verification at start |
-| Projected 50-epoch GPU time | epochs 22–41 averaged ≈1,571 s; 9 epochs remain ≈ 3.9 h plus ≈15 min → session 4 (epochs 42–50) |
-| Epochs completed / 50 | 41 (`run_status.json` status `partial`); sessions 2 and 3 each resumed with the same run fingerprint `1103636b…`; earlier history rows carried over unchanged (checked row by row) |
-| Epoch 1 validation (partial run, not a result) | train loss 0.4563, val loss 0.3245; TP 0 / TN 391 / FP 0 / FN 40; accuracy 0.9072 (= all-negative rate), sensitivity 0.000, specificity 1.000, precision undefined, F1 0.000, balanced accuracy 0.500, AP 0.2585, ROC-AUC 0.6679 |
-| Best checkpoint so far (partial run) | still epoch 15 after 41 epochs, `best.pt` SHA256 `c041f7e2…3ec16`; session 3 reload reproduced validation probabilities exactly (max diff 0.0). Epoch 15: TP 38 / TN 389 / FP 2 / FN 2; accuracy 0.9907, sensitivity 0.950, specificity 0.9949, precision 0.950, F1 0.950, balanced accuracy 0.9724, AP 0.9795, ROC-AUC 0.9970. May change in epochs 42–50. |
-| Sessions 2–3 memory / stability | epoch peak reserved 9.91 GB; 1 AMP skipped update (epoch 17), 0 otherwise. ReduceLROnPlateau lowered the learning rate to 1.5e-6 from epoch 27 and 1.5e-7 from epoch 38 |
-| Validation by epoch (partial run) | see table below |
+| **Selected epoch 15, validation (431 clips: 40 RD, 391 non-RD), threshold 0.5** | TP 38 / TN 389 / FP 2 / FN 2; accuracy **0.9907**, sensitivity **0.950**, specificity 0.9949, precision 0.950, F1 0.950, balanced accuracy 0.9724, AP 0.9795, ROC-AUC 0.9970 |
+| Final epoch 50, validation (not selected) | TP 35 / TN 390 / FP 1 / FN 5; accuracy 0.9861, sensitivity 0.875, specificity 0.9974, balanced accuracy 0.9362, ROC-AUC 0.9944 |
+| Total GPU training time | 50 epochs summed 22.6 h (`epoch_memory.json`), plus ≈15 min cache verification per session (4 sessions) |
+| Epochs completed / 50 | **50** (`run_status.json` status `completed`); sessions 2–4 each resumed with the same run fingerprint `1103636b…`; earlier history rows carried over unchanged (checked row by row each session) |
+| Selected checkpoint (final) | **epoch 15** by highest validation accuracy (earliest tie rule; no later epoch reached 0.9907). `best.pt` SHA256 `c041f7e2f635e9f3203e76045fbad247c3243788d527425d27cc73b27b93ec16`; final-session reload reproduced validation probabilities exactly (max diff 0.0) |
+| Memory / stability | epoch peak reserved 9.91 GB of 15.6 GB; 1 AMP skipped update in 50 epochs (epoch 17). ReduceLROnPlateau: 1.5e-5 → 1.5e-6 (epoch 27) → 1.5e-7 (epoch 38) → 1.5e-8 (epoch 50) |
+| Validation by epoch | see table below |
 | Grad-CAM layer (real clip) | `backbone.layer4`, `[1,512,12,8,8]` for input `[1,1,96,128,128]` |
-| Artifact integrity | session 1: 20 small files, session 2: 40, session 3: 60 — all match `artifact_sha256.json` |
+| Artifact integrity | every downloaded small file matched `artifact_sha256.json` in each session (20, 40, 60, 69 files); checkpoint `.pt` files were not downloaded locally |
 | Inference timing | pending |
-| Private artifact location | Kaggle output of `namanbabariya/r2plus1d18-rd-001-train-01` (latest version); local copy under ignored `outputs/kaggle_results/` |
+| Private artifact location | Kaggle output of `namanbabariya/r2plus1d18-rd-001-train-04` (final `best.pt`, `last_*.pt`, full history and per-epoch validation files); sessions 1–3 outputs hold intermediate checkpoints. Local small-file copies under ignored `outputs/kaggle_results/r2p1_s0{1..4}_small/` |
 
 
 ### Validation by epoch (official validation split, 431 clips, threshold 0.5)
 
-From `history.csv` of `-train-03` (rows 1–21 identical to `-train-02`). Selection rule: highest accuracy, earliest tie.
+From `history.csv` of `-train-04` (rows 1–41 identical to earlier sessions). Selection rule: highest accuracy, earliest tie.
 
 | Epoch | Train loss | Val loss | Acc | Sens | Spec | Bal. acc | ROC-AUC | AP | TP/FN/FP |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -202,8 +205,17 @@ From `history.csv` of `-train-03` (rows 1–21 identical to `-train-02`). Select
 | 39 | 0.0080 | 0.0494 | 0.9861 | 0.8500 | 1.0000 | 0.9250 | 0.9946 | 0.9718 | 34/6/0 |
 | 40 | 0.0094 | 0.0509 | 0.9838 | 0.8250 | 1.0000 | 0.9125 | 0.9952 | 0.9699 | 33/7/0 |
 | 41 | 0.0079 | 0.0525 | 0.9884 | 0.8750 | 1.0000 | 0.9375 | 0.9946 | 0.9682 | 35/5/0 |
+| 42 | 0.0071 | 0.0603 | 0.9791 | 0.7750 | 1.0000 | 0.8875 | 0.9942 | 0.9638 | 31/9/0 |
+| 43 | 0.0082 | 0.0644 | 0.9791 | 0.7750 | 1.0000 | 0.8875 | 0.9952 | 0.9706 | 31/9/0 |
+| 44 | 0.0072 | 0.0533 | 0.9814 | 0.8000 | 1.0000 | 0.9000 | 0.9937 | 0.9668 | 32/8/0 |
+| 45 | 0.0079 | 0.0517 | 0.9884 | 0.8750 | 1.0000 | 0.9375 | 0.9944 | 0.9669 | 35/5/0 |
+| 46 | 0.0069 | 0.0499 | 0.9861 | 0.8500 | 1.0000 | 0.9250 | 0.9949 | 0.9703 | 34/6/0 |
+| 47 | 0.0084 | 0.0484 | 0.9861 | 0.8500 | 1.0000 | 0.9250 | 0.9948 | 0.9710 | 34/6/0 |
+| 48 | 0.0079 | 0.0625 | 0.9791 | 0.7750 | 1.0000 | 0.8875 | 0.9950 | 0.9696 | 31/9/0 |
+| 49 | 0.0082 | 0.0513 | 0.9861 | 0.8500 | 1.0000 | 0.9250 | 0.9948 | 0.9709 | 34/6/0 |
+| 50 | 0.0063 | 0.0466 | 0.9861 | 0.8750 | 0.9974 | 0.9362 | 0.9944 | 0.9695 | 35/5/1 |
 
-Validation sensitivity is unstable across epochs (0.300–0.950 from epoch 4 on; 0.300 at epoch 23) with only 40 RD clips; one clip moves sensitivity by 0.025.
+Validation sensitivity is unstable across epochs (0.300–0.950 from epoch 4 on; 0.300 at epoch 23) with only 40 RD clips; one clip moves sensitivity by 0.025. Epoch 15 was selected on this same validation split, so its metrics are optimistically biased as an estimate of performance on new data; after the learning-rate drops (epochs 27–50) accuracy stayed in 0.977–0.988 and sensitivity in 0.750–0.900.
 
 Reference for later comparison (U-Net++ epoch 48, **validation**): accuracy 0.988399,
 sensitivity 0.925000. No test inference is planned until the team freezes all choices;
