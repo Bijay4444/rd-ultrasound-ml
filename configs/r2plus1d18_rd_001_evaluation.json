@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "r2plus1d18_rd_001_test",
+  "model_label": "R(2+1)D-18",
+  "frozen_at_utc": "2026-11-13T00:00:00+00:00",
+  "team_freeze_confirmed": true,
+  "team_freeze_note": "Confirmed 2026-11-13 by the R(2+1)D-18 owner (teammate 1), who instructed the single test run. This fixes the R(2+1)D-18 choices only (epoch 15, threshold 0.5); a team-wide freeze of all models is not recorded here.",
+  "training_experiment_id": "r2plus1d18_rd_001_amp",
+  "training_source": "namanbabariya/r2plus1d18-rd-001-train-04",
+  "training_source_version": 1,
+  "training_epochs_completed": 50,
+  "selected_epoch": 15,
+  "selection_rule": "highest validation accuracy; earliest on ties",
+  "checkpoint_file": "best.pt",
+  "checkpoint_sha256": "c041f7e2f635e9f3203e76045fbad247c3243788d527425d27cc73b27b93ec16",
+  "training_config_digest": "afecb01905e0ac77ede0728c4b00149652f18184a4fc14a691acb93f729dbfa4",
+  "training_run_fingerprint": "1103636b032e120507f278df8f50ba763b6c8feb4fb5d10f3b6941be1ba68902",
+  "training_implementation_sha256": {
+    "unetpp_baseline": "5180b7022ecd54f3319fa0d780a992c95fa404a5ce8dbae15766db24eef3c5ed",
+    "unetpp_training": "7bc8a073d45e08a4c6d24595508be65f9596dbc50500f6dc6799bdc23d7fe2e1",
+    "unetpp_data": "e6e186ed51bd5b33260e09b7b7b64caea23f28103bbdcd3749125b44c30feb61",
+    "unetpp_kaggle": "fc39badd5f9e20377e3c3052200bf188df8e9c98ccd6a5ef5a1278cf14c5013d",
+    "video_cache": "83ce03c382213cfe1648299a8385c5be12f1cb6fd1844ea1e3124abf55f2957b",
+    "comparison_export": "0f7d133fc466c93abe87dd670dbe1b2351b5c38cf82b5547cbc441190e916747",
+    "r2plus1d18_baseline": "b47554479e9142464d8b968ce7b6446d58a9f2a50b5f063b2660ec3df7769f47"
+  },
+  "training_runtime": {
+    "python": "3.13.16 (main, Oct  1 2026, 15:40:24) [GCC 13.3.0]",
+    "torch": "2.11.0+cu130",
+    "torchvision": "0.26.0+cu130",
+    "numpy": "2.1.3",
+    "opencv": "4.14.0",
+    "pandas": "2.3.3",
+    "sklearn": "1.6.1",
+    "huggingface_hub": "1.33.0",
+    "cuda": "13.0",
+    "cudnn": 92700,
+    "gpu": "Tesla T4",
+    "gpu_total_memory_bytes": 15636037632,
+    "cpu_torch_threads": 2,
+    "cudnn_benchmark": false,
+    "matmul_tf32": false,
+    "cudnn_tf32": false
+  },
+  "dataset_revision": "7867e2504ed3845a46ff7790a2f8c3ffcdc08947",
+  "task": "non_rd_vs_rd",
+  "positive_class": "rd",
+  "threshold": 0.5,
+  "precision": "16-mixed",
+  "physical_batch": 4,
+  "preprocessing_identity": {
+    "preprocessing": {
+      "num_frames": 96,
+      "height": 128,
+      "width": 128,
+      "grayscale": "arithmetic channel mean",
+      "padding": "symmetric zero padding to square",
+      "resize": "full time/spatial trilinear interpolation",
+      "align_corners": false,
+      "normalization": "divide by 255",
+      "dtype": "float32",
+      "layout": "B,C,D,H,W",
+      "frame_subsampling": false,
+      "augmentation": "none",
+      "roundoff_tolerance": 1e-06
+    },
+    "implementation": "5180b7022ecd54f3319fa0d780a992c95fa404a5ce8dbae15766db24eef3c5ed",
+    "torch": "2.11.0+cpu",
+    "opencv": "4.14.0",
+    "numpy": "2.1.3"
+  },
+  "test_cache": {
+    "source": "bijaykhadka1710/unetpp-rd-002-test-inputs",
+    "source_version": 1,
+    "preparation_evaluation_id": "unetpp_rd_002_test",
+    "preparation_freeze_digest": "33c392efdd3cc0bb34c799a692f0411aa1711970e25c31ca49fc9d76db652b49"
+  },
+  "test_clips": 1077,
+  "test_label_counts": {
+    "0": 977,
+    "1": 100
+  },
+  "test_policy": "single fixed-checkpoint evaluation; no optimizer, threshold search, epoch selection or retraining",
+  "test_accessed_at_freeze": false,
+  "benchmark_label": "reused official test benchmark",
+  "reference_test_rows": [
+    {
+      "source": "U-Net++ epoch 48 (bijaykhadka1710/unetpp-rd-002-test-evaluation/1, verified)",
+      "partition": "reused official test benchmark",
+      "TP": 86,
+      "TN": 964,
+      "FP": 13,
+      "FN": 14,
+      "sensitivity": 0.86,
+      "specificity": 0.986694,
+      "precision": 0.868687,
+      "F1": 0.864322,
+      "accuracy": 0.97493,
+      "balanced_accuracy": 0.923347,
+      "average_precision": 0.926845,
+      "ROC_AUC": 0.986858
+    }
+  ],
+  "disclosures": [
+    "The official test split was already exposed at project level by the U-Net++ evaluation; this is a reused official test benchmark, not an untouched holdout.",
+    "Reuses the U-Net++ test-input cache (pinned preparation freeze digest); its preprocessing identity must equal the training cache identity.",
+    "Epoch 15 and threshold 0.5 were fixed on validation before any R(2+1)D-18 test access; no test-driven tuning.",
+    "FP16 autocast inference on one Kaggle T4 GPU, physical batch 4; timing is recorded with that hardware/batch/precision.",
+    "Official splits are clip-level with possible same-patient overlap; one seed; no unseen-patient or clinical-validation claim.",
+    "Inherited U-Net++ recipe; not R(2+1)D-18's tuned best. torchvision R(2+1)D-18 is not an ERDES Table 8 row."
+  ]
+}
