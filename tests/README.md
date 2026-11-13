@@ -91,3 +91,25 @@ updates, duplicate result rejection, prepared test tensor corruption, exact
 notebook/config/module embedding and private version-pinned submission bundles.
 All 62 tests pass. Synthetic inference/export verification is implementation
 evidence; it is not a real ERDES test result.
+
+
+`test_r2plus1d18.py` checks the R(2+1)D-18 comparison model: only the first stem
+convolution becomes one-channel (temporal stem and factorized blocks preserved),
+builder-consistent initialization, no weight download, `[B]` logits with finite
+nonzero gradients, the full `[1,1,96,128,128]` shape and the `backbone.layer4`
+Grad-CAM feature shape. It also checks the shared cache adapter
+(`video_cache.py`): verified U-Net++ shards load under the new training identity,
+while edited preparation configs, wrong digest/fingerprint pins, changed
+preprocessing, corrupted tensors and changed labels are rejected. Further checks:
+session resume equal to uninterrupted CPU training, resume refusal on changed
+identity, selected-checkpoint reload reproducing validation probabilities,
+notebook freshness/embedding, and version-pinned private bundles. Needs
+torchvision in addition to the libraries above (`--with torchvision`). Synthetic
+CPU data only; not an ERDES result.
+
+`test_r2plus1d18_evaluation.py` checks the gated R(2+1)D-18 frozen test evaluation on
+synthetic CPU data: the team-freeze gate blocks before any test access, training and
+reused test-cache verification reject changed pins, identities, split hashes and tensors,
+inference uses frozen weights and threshold with timing and no optimizer, the tracked freeze
+matches the training sources and the U-Net++ test-input freeze, and the notebook matches its
+builder. It never opens real test data.
