@@ -2,9 +2,9 @@
 
 Updated 2026-11-12. **Status: training complete, 50 of 50 epochs (`run_status.json` status `completed`),
 on Kaggle Tesla T4 over four sessions: `namanbabariya/r2plus1d18-rd-001-train-01` epoch 1, `-train-02` epochs
-2–21, `-train-03` epochs 22–41, `-train-04` epochs 42–50. Selected checkpoint: epoch 15. All metrics here are
-on the official validation split, which was also used for checkpoint selection; no test inference has been
-run.** Versions 1 and 2 of `-train-01` were allocated no GPU and stopped at the CUDA check before reading
+2–21, `-train-03` epochs 22–41, `-train-04` epochs 42–50. Selected checkpoint: epoch 15. The single frozen evaluation on the reused official test split ran on
+2026-11-13 (see "Reused official test benchmark"); all other metrics are on the validation split, which
+was also used for checkpoint selection.** Versions 1 and 2 of `-train-01` were allocated no GPU and stopped at the CUDA check before reading
 data; the successful session 1 was started from the Kaggle editor with GPU T4 selected. Sessions 2–4 were
 pushed from the CLI and got the T4.
 Every cell below marked `pending` is unmeasured. This document must be
@@ -154,7 +154,7 @@ the cache record, and `artifact_sha256.json`.
 | Validation by epoch | see table below |
 | Grad-CAM layer (real clip) | `backbone.layer4`, `[1,512,12,8,8]` for input `[1,1,96,128,128]` |
 | Artifact integrity | every downloaded small file matched `artifact_sha256.json` in each session (20, 40, 60, 69 files); checkpoint `.pt` files were not downloaded locally |
-| Inference timing | pending |
+| Inference timing | Tesla T4, batch 4, FP16: 91.4 ms per clip model forward (test run; see reused test section) |
 | Private artifact location | Kaggle output of `namanbabariya/r2plus1d18-rd-001-train-04` (final `best.pt`, `last_*.pt`, full history and per-epoch validation files); sessions 1–3 outputs hold intermediate checkpoints. Local small-file copies under ignored `outputs/kaggle_results/r2p1_s0{1..4}_small/` |
 
 
@@ -240,38 +240,71 @@ Observations (not yet explained):
   threshold choices made on validation and the result reported on test.
 
 Reference for later comparison (U-Net++ epoch 48, **validation**): accuracy 0.988399,
-sensitivity 0.925000. No test inference is planned until the team freezes all choices;
-any later test result must be labelled **reused official benchmark**.
+sensitivity 0.925000. The R(2+1)D-18 test result is reported separately below as a **reused official test benchmark**.
 
-## Test evaluation: prepared, not run
+## Reused official test benchmark (single frozen evaluation, 2026-11-13)
 
-No R(2+1)D-18 test inference has been run. The single frozen evaluation is built but
-**gated**: `configs/r2plus1d18_rd_001_evaluation.json` has `team_freeze_confirmed: false`,
-and both the notebook and the bundle script refuse to proceed until a reviewed commit sets it
-to `true` after the team freezes all choices (holdout policy in `MODEL_COMPARISON_PLAN.md`).
+Private Kaggle job `namanbabariya/r2plus1d18-rd-001-test-evaluation` version 1 (Tesla T4, torch
+2.11.0+cu130; runtime identical to training) evaluated the frozen **epoch 15** checkpoint
+(`c041f7e2…3ec16`) once at **threshold 0.5** on all **1,077** official test clips (100 RD / 977 non-RD).
+No training, threshold search or epoch selection. The official test split was already used for the
+U-Net++ result, so this is a **reused official test benchmark**, not an untouched holdout.
 
-- Freeze: epoch 15, `best.pt` SHA256 `c041f7e2…3ec16`, threshold 0.5, FP16, physical batch 4;
-  training config digest `afecb019…`, run fingerprint `1103636b…`, training module hashes,
-  training GPU runtime, and preprocessing identity.
+Freeze: `configs/r2plus1d18_rd_001_evaluation.json`, committed before the job (`70f32af`); the gate was set
+in `e5ee644`, confirmed by the R(2+1)D-18 owner. It fixes this model's choices only; a team-wide freeze of
+all models is not recorded there.
+
+| Reused official test | R(2+1)D-18 epoch 15 | U-Net++ epoch 48 (reference) |
+| --- | ---: | ---: |
+| TP / TN / FP / FN | 92 / 962 / 15 / 8 | 86 / 964 / 13 / 14 |
+| Sensitivity | **0.9200** | 0.8600 |
+| Specificity | 0.9846 | 0.9867 |
+| Precision | 0.8598 | 0.8687 |
+| F1 | 0.8889 | 0.8643 |
+| Accuracy | 0.9786 | 0.9749 |
+| Balanced accuracy | 0.9523 | 0.9233 |
+| Average precision | 0.9589 | 0.9268 |
+| ROC-AUC | 0.9933 | 0.9869 |
+| BCE loss | 0.0654 | 0.0813 |
+
+Inference timing (Tesla T4, physical batch 4, FP16 autocast): model forward 102.6 s for 1,077 clips,
+**91.4 ms per clip** excluding the first (warm-up) batch of 4.49 s; 111.4 s including loading cached
+tensors from disk. Inputs are pre-decoded `[1,96,128,128]` float32 tensors, so video decoding is excluded.
+
+Verification (local, independent of the notebook): all 16 artifact hashes match `artifact_sha256.json`;
+1,077 unique prediction rows match the test manifest's clip order and labels (977/100); thresholded labels
+match the probabilities; TP/TN/FP/FN and every metric above were recomputed from the predictions with
+scikit-learn and match `test_metrics.json` exactly; the saved freeze equals the tracked config; the
+test-input provenance carries the pinned preparation-freeze digest `33c392ef…`.
+
+Paired comparison with U-Net++ on the same 1,077 clips (U-Net++ predictions downloaded from
+`bijaykhadka1710/unetpp-rd-002-test-evaluation/1`, hashes verified): R(2+1)D-18 alone was correct on 15
+clips, U-Net++ alone on 11, both wrong on 12; exact McNemar p = 0.56, so overall accuracy is **not**
+distinguishable. On the 100 RD clips, R(2+1)D-18 alone caught 6 and U-Net++ alone 0 (exact two-sided
+p = 0.031). This is one post-hoc, unadjusted test on one seed and clip-level splits; treat it as suggestive,
+not established. R(2+1)D-18 also made 2 more false positives.
+
+Error pattern (observed, not explained): 11 of the 15 false positives have clip prefix `825315`, the same
+prefix as both validation false positives; 4 of the 8 missed RD clips have prefix `102769`, as did one
+validation miss. These clips may share source recordings; clip-level splits can place related clips in
+different partitions.
+
+Local copies (ignored): `outputs/kaggle_results/r2p1_test/` and `outputs/kaggle_results/unetpp_test_ref/`.
+
+### How the test stage was built
+
 - `src/rd_ultrasound_ml/comparison_evaluation.py` (model-agnostic, reusable for R3D-18) verifies the
   training artifact **before** opening `test.csv`, then reuses the U-Net++ test-input cache
   (`bijaykhadka1710/unetpp-rd-002-test-inputs/1`) without relabeling it: the cache's own freeze must hash
-  to its manifest and to the pinned digest `33c392ef…`, the official archive MD5s and `test.csv` hash are
-  re-checked, and all 1,077 tensors, labels, order and the preprocessing identity are verified.
-  Inference is one forward pass per clip, no optimizer, with the model state checked unchanged.
-  It records inference timing (hardware, batch, precision) and writes predictions, metrics and a
-  comparison CSV with the verified U-Net++ reused-test row.
+  to its manifest and to the pinned digest, the official archive MD5s and `test.csv` hash are re-checked,
+  and all 1,077 tensors, labels, order and the preprocessing identity are verified. One forward pass per
+  clip, no optimizer, model state checked unchanged; inference timing recorded.
 - `scripts/build_r2plus1d18_evaluation_notebook.py` → `notebooks/kaggle_r2plus1d18_evaluation.ipynb`;
-  `scripts/prepare_r2plus1d18_evaluation_job.py` writes a private, GPU, internet-off bundle pinned to
-  `namanbabariya/r2plus1d18-rd-001-train-04/1` and the test-input output. It does not submit.
-- The GPU runtime must equal the training runtime, or the job stops before test data is opened.
-- Access: `bijaykhadka1710/unetpp-rd-002-test-inputs` is shared with `namanbabariya`; a metadata-only status check returned COMPLETE on 2026-11-13 (no test files were downloaded).
-- Checks: `tests/test_r2plus1d18_evaluation.py` (7 tests, synthetic CPU) cover the team gate, training
-  verification, cache reuse accept/reject cases, frozen inference and timing, freeze pins against tracked
-  sources and the U-Net++ freeze, notebook/builder consistency, and the bundle refusal.
-  Run with pandas 2.3.3 (Kaggle's version) because Windows Application Control blocked pandas 3.1.1's DLL here.
-
-Any result must be reported as a **reused official test benchmark**, separately from validation.
+  `scripts/prepare_r2plus1d18_evaluation_job.py` writes the private, GPU, internet-off bundle pinned to
+  `namanbabariya/r2plus1d18-rd-001-train-04/1` and the test-input output, and refuses unless
+  `team_freeze_confirmed` is true. The GPU runtime must equal training or the job stops before test access.
+- `tests/test_r2plus1d18_evaluation.py` (7 tests, synthetic CPU). Run with pandas 2.3.3 (Kaggle's version)
+  because Windows Application Control blocked pandas 3.1.1's DLL on this machine.
 
 ## Limitations and deviations
 
