@@ -106,3 +106,10 @@ identity, selected-checkpoint reload reproducing validation probabilities,
 notebook freshness/embedding, and version-pinned private bundles. Needs
 torchvision in addition to the libraries above (`--with torchvision`). Synthetic
 CPU data only; not an ERDES result.
+
+`test_r2plus1d18_evaluation.py` checks the gated R(2+1)D-18 frozen test evaluation on
+synthetic CPU data: the team-freeze gate blocks before any test access, training and
+reused test-cache verification reject changed pins, identities, split hashes and tensors,
+inference uses frozen weights and threshold with timing and no optimizer, the tracked freeze
+matches the training sources and the U-Net++ test-input freeze, and the notebook matches its
+builder. It never opens real test data.

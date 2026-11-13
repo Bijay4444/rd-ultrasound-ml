@@ -243,6 +243,36 @@ Reference for later comparison (U-Net++ epoch 48, **validation**): accuracy 0.98
 sensitivity 0.925000. No test inference is planned until the team freezes all choices;
 any later test result must be labelled **reused official benchmark**.
 
+## Test evaluation: prepared, not run
+
+No R(2+1)D-18 test inference has been run. The single frozen evaluation is built but
+**gated**: `configs/r2plus1d18_rd_001_evaluation.json` has `team_freeze_confirmed: false`,
+and both the notebook and the bundle script refuse to proceed until a reviewed commit sets it
+to `true` after the team freezes all choices (holdout policy in `MODEL_COMPARISON_PLAN.md`).
+
+- Freeze: epoch 15, `best.pt` SHA256 `c041f7e2…3ec16`, threshold 0.5, FP16, physical batch 4;
+  training config digest `afecb019…`, run fingerprint `1103636b…`, training module hashes,
+  training GPU runtime, and preprocessing identity.
+- `src/rd_ultrasound_ml/comparison_evaluation.py` (model-agnostic, reusable for R3D-18) verifies the
+  training artifact **before** opening `test.csv`, then reuses the U-Net++ test-input cache
+  (`bijaykhadka1710/unetpp-rd-002-test-inputs/1`) without relabeling it: the cache's own freeze must hash
+  to its manifest and to the pinned digest `33c392ef…`, the official archive MD5s and `test.csv` hash are
+  re-checked, and all 1,077 tensors, labels, order and the preprocessing identity are verified.
+  Inference is one forward pass per clip, no optimizer, with the model state checked unchanged.
+  It records inference timing (hardware, batch, precision) and writes predictions, metrics and a
+  comparison CSV with the verified U-Net++ reused-test row.
+- `scripts/build_r2plus1d18_evaluation_notebook.py` → `notebooks/kaggle_r2plus1d18_evaluation.ipynb`;
+  `scripts/prepare_r2plus1d18_evaluation_job.py` writes a private, GPU, internet-off bundle pinned to
+  `namanbabariya/r2plus1d18-rd-001-train-04/1` and the test-input output. It does not submit.
+- The GPU runtime must equal the training runtime, or the job stops before test data is opened.
+- Access: `bijaykhadka1710/unetpp-rd-002-test-inputs` is shared with `namanbabariya`; a metadata-only status check returned COMPLETE on 2026-11-13 (no test files were downloaded).
+- Checks: `tests/test_r2plus1d18_evaluation.py` (7 tests, synthetic CPU) cover the team gate, training
+  verification, cache reuse accept/reject cases, frozen inference and timing, freeze pins against tracked
+  sources and the U-Net++ freeze, notebook/builder consistency, and the bundle refusal.
+  Run with pandas 2.3.3 (Kaggle's version) because Windows Application Control blocked pandas 3.1.1's DLL here.
+
+Any result must be reported as a **reused official test benchmark**, separately from validation.
+
 ## Limitations and deviations
 
 - This compares architectures under the inherited U-Net++ recipe. The small learning rate may disadvantage this model, so the result is not this model's tuned best.
