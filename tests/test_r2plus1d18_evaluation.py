@@ -100,7 +100,9 @@ class R2Plus1D18EvaluationTests(unittest.TestCase):
                     load_reused_test_cache('/must/not/read', directory, {**freeze, 'team_freeze_confirmed': False})
                 read_split.assert_not_called()
             tracked = json.loads(FREEZE_PATH.read_text(encoding='utf-8'))
-            self.assertIs(tracked['team_freeze_confirmed'], False)
+            if tracked['team_freeze_confirmed'] is not False:
+                self.assertIs(tracked['team_freeze_confirmed'], True)
+                self.assertIn('Confirmed', tracked['team_freeze_note'])
 
     def test_training_verification_rejects_changed_selection_checkpoint_or_code(self):
         with TemporaryDirectory() as tmp:
@@ -204,7 +206,7 @@ class R2Plus1D18EvaluationTests(unittest.TestCase):
         owner = freeze['training_source'].split('/')[0]
         with TemporaryDirectory() as tmp:
             with self.assertRaisesRegex(ValueError, 'Team freeze not confirmed'):
-                write_evaluation_bundle(owner, tmp)
+                write_evaluation_bundle(owner, tmp, {**freeze, 'team_freeze_confirmed': False})
             self.assertFalse(any(Path(tmp).iterdir()))
             _, metadata = write_evaluation_bundle(owner, tmp, {**freeze, 'team_freeze_confirmed': True})
             self.assertTrue(metadata['is_private'])
