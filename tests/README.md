@@ -136,3 +136,14 @@ reused test-cache verification reject changed pins, identities, split hashes and
 inference uses frozen weights and threshold with timing and no optimizer, the tracked freeze
 matches the training sources and the U-Net++ test-input freeze, and the notebook matches its
 builder. It never opens real test data.
+
+`test_r3d18.py` checks the R3D-18 comparison model the same way: only the first stem
+convolution becomes one-channel (BatchNorm/ReLU, the 16 joint 3x3x3 convolutions and
+`Linear(512,1)` preserved), builder-consistent initialization, no weight download, `[B]` logits
+with finite nonzero gradients, the full `[1,1,96,128,128]` shape and the `backbone.layer4`
+Grad-CAM feature shape. It reuses the shared cache adapter (`video_cache.py`) and checks that
+verified U-Net++ shards load under the R3D-18 identity while altered provenance, pins,
+preprocessing, tensors and labels are rejected, that session resume equals uninterrupted CPU
+training, that resume refuses a changed identity, that selected-checkpoint reload reproduces
+validation probabilities, and that the notebook and private bundles match their builders.
+Needs torchvision (`uv pip install torchvision`). Synthetic CPU data only; not an ERDES result.
