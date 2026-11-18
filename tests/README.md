@@ -147,3 +147,11 @@ preprocessing, tensors and labels are rejected, that session resume equals unint
 training, that resume refuses a changed identity, that selected-checkpoint reload reproduces
 validation probabilities, and that the notebook and private bundles match their builders.
 Needs torchvision (`uv pip install torchvision`). Synthetic CPU data only; not an ERDES result.
+
+`test_r3d18_evaluation.py` checks the gated R3D-18 frozen test evaluation the same way as
+`test_r2plus1d18_evaluation.py`: the team-freeze gate blocks before any test access, training and
+reused test-cache verification reject changed pins, identities, split hashes and tensors,
+inference uses frozen weights and threshold with timing and no optimizer, the tracked freeze
+(epoch 18, threshold 0.5) matches the training sources and the U-Net++ test-input freeze, the
+notebook matches its builder, and the bundle refuses while `team_freeze_confirmed` is false. It
+never opens real test data.
