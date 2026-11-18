@@ -2,8 +2,9 @@
 
 Updated 2026-11-18. **Status: training complete, 50 of 50 epochs (`run_status.json` status `completed`), on
 Kaggle Tesla T4 over three sessions: `namanbabariya/r3d18-rd-001-train-01` epoch 1, `-train-02` epochs 2–36,
-`-train-03` epochs 37–50. Selected checkpoint: epoch 18. All metrics are on the official validation split, which
-was also used for checkpoint selection. The official test split has not been read.** See the
+`-train-03` epochs 37–50. Selected checkpoint: epoch 18. The single frozen evaluation on the reused official test
+split ran on 2026-11-18 (see "Reused official test benchmark"); all other metrics are on the validation split, which
+was also used for checkpoint selection.** See the
 [shared protocol](MODEL_COMPARISON_PLAN.md) and [assignment](handoffs/R3D18.md).
 
 Implementation (model, config, notebook builder, job script, tests and the first version of this report) by the
@@ -156,7 +157,7 @@ difference. Every session must therefore get the same GPU type (the bundle reque
 | Validation by epoch | see table below |
 | Grad-CAM layer (real clip) | `backbone.layer4`, `[1,512,12,8,8]` for input `[1,1,96,128,128]` |
 | Artifact integrity | every downloaded small file matched `artifact_sha256.json` in each session; checkpoint `.pt` files were not downloaded locally |
-| Inference timing | pending (would come from a frozen test-evaluation job, as for R(2+1)D-18) |
+| Inference timing | Tesla T4, batch 4, FP16: 39.3 ms per clip model forward (test run; see reused test section) |
 | Private artifact location | Kaggle output of `namanbabariya/r3d18-rd-001-train-03` (final `best.pt`, `last_*.pt`, full history and per-epoch validation files); sessions 1–2 outputs hold intermediate checkpoints. Local small-file copies under ignored `outputs/kaggle_results/r3d_s0{1,2,3}_small/` |
 
 ### Validation by epoch (official validation split, 431 clips, threshold 0.5)
@@ -256,10 +257,79 @@ this same split; they do not establish that any one model is better. Summed per-
 excluded) was 9.47 h for R3D-18 versus 22.6 h for R(2+1)D-18 under the same recipe, hardware and Kaggle image, and
 R3D-18's peak allocated GPU memory was 3.32 GB versus 8.51 GB.
 
-Official-test numbers are not reported here. The test split is not touched until the team freezes all final choices;
-a frozen R3D-18 test run would be labelled a **reused official test benchmark**. The model-agnostic
-`comparison_evaluation.py` exists (added for R(2+1)D-18), but an R3D-18 evaluation config, gated notebook, job script
-and tests (modelled on the R(2+1)D-18 ones) still need to be built for it.
+The R3D-18 test result is reported separately below as a **reused official test benchmark**.
+
+## Reused official test benchmark (single frozen evaluation, 2026-11-18)
+
+Private Kaggle job `namanbabariya/r3d18-rd-001-test-evaluation` version 1 (Tesla T4, torch 2.11.0+cu130; runtime
+identical to training) evaluated the frozen **epoch 18** checkpoint (`5422add5…63152`) once at **threshold 0.5** on
+all **1,077** official test clips (100 RD / 977 non-RD). No training, threshold search or epoch selection. The
+official test split was already used for the U-Net++ and R(2+1)D-18 results, so this is a **reused official test
+benchmark**, not an untouched holdout.
+
+Freeze: `configs/r3d18_rd_001_evaluation.json`, committed with the gate closed (`cbc8986`) and opened in `8a29a6e`
+after the team confirmed the freeze of final model choices on 2026-11-18 (as reported by the R(2+1)D-18 owner, who
+ran this training).
+
+| Reused official test | R3D-18 epoch 18 | R(2+1)D-18 epoch 15 (reference) | U-Net++ epoch 48 (reference) |
+| --- | ---: | ---: | ---: |
+| TP / TN / FP / FN | 89 / 966 / 11 / 11 | 92 / 962 / 15 / 8 | 86 / 964 / 13 / 14 |
+| Sensitivity | 0.8900 | **0.9200** | 0.8600 |
+| Specificity | **0.9887** | 0.9846 | 0.9867 |
+| Precision | **0.8900** | 0.8598 | 0.8687 |
+| F1 | **0.8900** | 0.8889 | 0.8643 |
+| Accuracy | **0.9796** | 0.9786 | 0.9749 |
+| Balanced accuracy | 0.9394 | **0.9523** | 0.9233 |
+| Average precision | **0.9619** | 0.9589 | 0.9268 |
+| ROC-AUC | 0.9930 | **0.9933** | 0.9869 |
+| BCE loss | 0.0704 | **0.0654** | 0.0813 |
+
+Inference timing (Tesla T4, physical batch 4, FP16 autocast): model forward 46.0 s for 1,077 clips,
+**39.3 ms per clip** excluding the first (warm-up) batch of 3.76 s; 51.4 s including loading cached tensors from disk
+(R(2+1)D-18: 91.4 ms per clip). Inputs are pre-decoded `[1,96,128,128]` float32 tensors, so video decoding is excluded.
+
+Verification (local, independent of the notebook): all 16 artifact hashes match `artifact_sha256.json`; the saved
+freeze equals the tracked config; the 8 embedded source files equal the repository files; the runtime equals the
+training runtime; 1,077 unique prediction rows match the test manifest's clip order and labels (977/100);
+thresholded labels match the probabilities; TP/TN/FP/FN and every metric above were recomputed from the predictions
+with scikit-learn and match `test_metrics.json` (loss within 2e-10); the test-input provenance carries the pinned
+preparation-freeze digest `33c392ef…`.
+
+Paired comparisons on the same 1,077 clips (reference predictions from the verified local copies of
+`bijaykhadka1710/unetpp-rd-002-test-evaluation/1` and `namanbabariya/r2plus1d18-rd-001-test-evaluation/1`):
+
+| R3D-18 vs | R3D-18 alone correct | Other alone correct | Both wrong | Exact McNemar p | RD clips: R3D-18 alone caught / other alone caught (p) |
+| --- | ---: | ---: | ---: | ---: | --- |
+| U-Net++ | 14 | 9 | 13 | 0.41 | 5 / 2 (0.45) |
+| R(2+1)D-18 | 8 | 7 | 15 | 1.00 | 1 / 4 (0.38) |
+
+Overall accuracy is **not** distinguishable between R3D-18 and either reference model. These are post-hoc,
+unadjusted tests on one seed and clip-level splits; treat them as descriptive. R3D-18 traded sensitivity for
+specificity relative to R(2+1)D-18 (3 more missed RD clips, 4 fewer false positives).
+
+Error pattern (observed, not explained): the 11 missed RD clips have prefixes `102769` (5), `405744` (4), `258033`
+and `755384`; 7 of them were also missed by R(2+1)D-18 and 9 by U-Net++. The 11 false positives have prefixes
+`825315` (6) and `164267` (5); `825315` is also the prefix of most R(2+1)D-18 test false positives. These clips may
+share source recordings; clip-level splits can place related clips in different partitions. Validation-to-test
+drop: sensitivity 0.925 → 0.890 and accuracy 0.9930 → 0.9796, consistent with the selected validation metrics being
+optimistic.
+
+Local copies (ignored): `outputs/kaggle_results/r3d_test/`.
+
+### How the test stage was built
+
+- Reuses `src/rd_ultrasound_ml/comparison_evaluation.py` unchanged (added for R(2+1)D-18): it verifies the training
+  artifact **before** opening `test.csv`, reuses the U-Net++ test-input cache without relabeling it, re-checks the
+  official archive and `test.csv` hashes and all 1,077 tensors, labels, order and the preprocessing identity, runs one
+  forward pass per clip with no optimizer, and checks the model state is unchanged.
+- `scripts/build_r3d18_evaluation_notebook.py` → `notebooks/kaggle_r3d18_evaluation.ipynb` and
+  `scripts/prepare_r3d18_evaluation_job.py` (private, GPU, internet-off bundle pinned to
+  `namanbabariya/r3d18-rd-001-train-03/1` and `bijaykhadka1710/unetpp-rd-002-test-inputs/1`; refuses unless
+  `team_freeze_confirmed` is true), adapted from the R(2+1)D-18 versions.
+- `tests/test_r3d18_evaluation.py` (7 tests, synthetic CPU): 7/7 passed with the gate closed and again with it open,
+  run with pandas 2.3.3 because Windows Application Control blocks pandas 3.x's DLL on this machine.
+- Submitted through the Python Kaggle-CLI workaround described above; both inputs were confirmed COMPLETE by hand
+  before the push.
 
 ## Limitations and deviations
 
