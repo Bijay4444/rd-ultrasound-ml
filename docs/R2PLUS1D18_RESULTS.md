@@ -1,6 +1,6 @@
 # R(2+1)D-18 RD comparison: `r2plus1d18_rd_001_amp`
 
-Updated 2026-11-12. **Status: training complete, 50 of 50 epochs (`run_status.json` status `completed`),
+Updated 2026-11-16. **Status: training complete, 50 of 50 epochs (`run_status.json` status `completed`),
 on Kaggle Tesla T4 over four sessions: `namanbabariya/r2plus1d18-rd-001-train-01` epoch 1, `-train-02` epochs
 2–21, `-train-03` epochs 22–41, `-train-04` epochs 42–50. Selected checkpoint: epoch 15. The single frozen evaluation on the reused official test split ran on
 2026-11-13 (see "Reused official test benchmark"); all other metrics are on the validation split, which
@@ -10,6 +10,14 @@ pushed from the CLI and got the T4.
 Every cell below marked `pending` is unmeasured. This document must be
 updated from saved Kaggle logs only. See the [shared protocol](MODEL_COMPARISON_PLAN.md)
 and [assignment](handoffs/R2PLUS1D18.md).
+
+**Independent artifact verification completed 2026-11-16:** the shared version-1
+test archive, final training evidence and selected checkpoint are now accessible
+and were downloaded locally. Test classification/ranking metrics and those from
+all 50 validation epochs were recomputed from predictions; the selected weights match the frozen
+SHA256 and load safely with finite tensors. See the
+[verification report](R2PLUS1D18_VERIFICATION.md) for evidence, local artifact
+paths and the checks not performed. No training or inference was rerun.
 
 Branch `feature/r2plus1d18-rd`, starting commit `911a4409f69bfb639ffb1dcde605de0877619e05`.
 
@@ -153,7 +161,7 @@ the cache record, and `artifact_sha256.json`.
 | Memory / stability | epoch peak reserved 9.91 GB of 15.6 GB; 1 AMP skipped update in 50 epochs (epoch 17). ReduceLROnPlateau: 1.5e-5 → 1.5e-6 (epoch 27) → 1.5e-7 (epoch 38) → 1.5e-8 (epoch 50) |
 | Validation by epoch | see table below |
 | Grad-CAM layer (real clip) | `backbone.layer4`, `[1,512,12,8,8]` for input `[1,1,96,128,128]` |
-| Artifact integrity | every downloaded small file matched `artifact_sha256.json` in each session (20, 40, 60, 69 files); checkpoint `.pt` files were not downloaded locally |
+| Artifact integrity | Independent 2026-11-16 final-output audit: **79** manifest entries; **77** verified (76 listed small artifacts plus selected `best.pt`). The two large resume checkpoints `last_a.pt` and `last_b.pt` were not downloaded or verified. All 16 test-archive artifact hashes also passed. Earlier-session integrity checks above are owner-reported and were not rerun by this audit. |
 | Inference timing | Tesla T4, batch 4, FP16: 91.4 ms per clip model forward (test run; see reused test section) |
 | Private artifact location | Kaggle output of `namanbabariya/r2plus1d18-rd-001-train-04` (final `best.pt`, `last_*.pt`, full history and per-epoch validation files); sessions 1–3 outputs hold intermediate checkpoints. Local small-file copies under ignored `outputs/kaggle_results/r2p1_s0{1..4}_small/` |
 
@@ -244,7 +252,7 @@ sensitivity 0.925000. The R(2+1)D-18 test result is reported separately below as
 
 ## Reused official test benchmark (single frozen evaluation, 2026-11-13)
 
-Private Kaggle job `namanbabariya/r2plus1d18-rd-001-test-evaluation` version 1 (Tesla T4, torch
+Kaggle job `namanbabariya/r2plus1d18-rd-001-test-evaluation` version 1 (Tesla T4, torch
 2.11.0+cu130; runtime identical to training) evaluated the frozen **epoch 15** checkpoint
 (`c041f7e2…3ec16`) once at **threshold 0.5** on all **1,077** official test clips (100 RD / 977 non-RD).
 No training, threshold search or epoch selection. The official test split was already used for the

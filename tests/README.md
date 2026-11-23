@@ -92,6 +92,29 @@ notebook/config/module embedding and private version-pinned submission bundles.
 All 62 tests pass. Synthetic inference/export verification is implementation
 evidence; it is not a real ERDES test result.
 
+`test_video_augmentation.py` and `test_augmentation_delivery.py` check training-only
+video augmentation: pixel-space affine oracles, temporal consistency, keyed RNG
+replay without changing global training RNG, input/label immutability, exact
+interrupted CPU training and optimizer resume, matched config, frozen sources,
+standalone notebook schema/embedding, private pinned bundles, and the actual
+training/validation/export notebook cells on synthetic CPU data. Together with
+`test_augmentation_continuation.py`, the 20 checks also reject corrupt archives
+before extraction and verify that failed jobs, failed audits or uncertain
+submissions cannot launch a later training job. The continuation test uses fake
+Kaggle responses and checks the 25/24-epoch handoff without allocating a GPU.
+
+`test_augmentation_analysis.py` adds four checks for aligned paired validation
+errors, invalid scores/labels, evaluation notebook freshness/schema and a
+confirmation gate that precedes test access, plus private version-pinned
+submission metadata. The augmentation suite totals 24 checks. The seven shared
+checks in `test_r2plus1d18_evaluation.py` also cover the model-agnostic evaluation
+helper reused by the augmented U-Net++ notebook.
+These checks
+need the existing CPU torch, pandas, scikit-learn, OpenCV, nbformat, matplotlib
+and Pillow stack. They never use ERDES test data or allocate a GPU. Run with
+`python -m unittest discover -s tests -p '*augmentation*.py' -v` in the isolated
+uv environment documented in `docs/UNETPP_AUGMENTATION_RESULTS.md`.
+
 
 `test_r2plus1d18.py` checks the R(2+1)D-18 comparison model: only the first stem
 convolution becomes one-channel (temporal stem and factorized blocks preserved),
@@ -113,3 +136,32 @@ reused test-cache verification reject changed pins, identities, split hashes and
 inference uses frozen weights and threshold with timing and no optimizer, the tracked freeze
 matches the training sources and the U-Net++ test-input freeze, and the notebook matches its
 builder. It never opens real test data.
+
+`test_r3d18.py` checks the R3D-18 comparison model the same way: only the first stem
+convolution becomes one-channel (BatchNorm/ReLU, the 16 joint 3x3x3 convolutions and
+`Linear(512,1)` preserved), builder-consistent initialization, no weight download, `[B]` logits
+with finite nonzero gradients, the full `[1,1,96,128,128]` shape and the `backbone.layer4`
+Grad-CAM feature shape. It reuses the shared cache adapter (`video_cache.py`) and checks that
+verified U-Net++ shards load under the R3D-18 identity while altered provenance, pins,
+preprocessing, tensors and labels are rejected, that session resume equals uninterrupted CPU
+training, that resume refuses a changed identity, that selected-checkpoint reload reproduces
+validation probabilities, and that the notebook and private bundles match their builders.
+Needs torchvision (`uv pip install torchvision`). Synthetic CPU data only; not an ERDES result.
+
+`test_r3d18_evaluation.py` checks the gated R3D-18 frozen test evaluation the same way as
+`test_r2plus1d18_evaluation.py`: the team-freeze gate blocks before any test access, training and
+reused test-cache verification reject changed pins, identities, split hashes and tensors,
+inference uses frozen weights and threshold with timing and no optimizer, the tracked freeze
+(epoch 18, threshold 0.5) matches the training sources and the U-Net++ test-input freeze, the
+notebook matches its builder, and the bundle refuses while `team_freeze_confirmed` is false. It
+never opens real test data.
+
+The 22 explanation checks (`*explainability*.py`) cover analytical Grad-CAM,
+state/hook preservation, real architecture shapes, controlled randomization,
+occlusion, PNG/GIF exports, standalone notebook/source identity and private
+bundles. `test_r3d18_explainability.py` adds the fixed historical case manifest,
+R3D-only subset guards, case-drift refusal before inference and an actual R3D
+gradient/state check. `test_explainability_demo.py` checks archive corruption,
+method drift, three-model assembly and unchanged historical display assets.
+These use synthetic CPU fixtures; real validation output verification is
+recorded separately in `docs/R3D18_EXPLAINABILITY_RESULTS.md`.

@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "unetpp_rd_aug_001_test",
+  "model_label": "U-Net++ + training augmentation",
+  "frozen_at_utc": "2026-11-22T23:11:45.305776+00:00",
+  "team_freeze_confirmed": true,
+  "team_freeze_note": "2026-11-22: Bijay reported that all other final model choices were frozen and asked to verify the missing peer handoff before moving forward. The supplied R3D-18 Kaggle evaluation version 1 and origin/feature/r3d18-training-eval at b08803bfe7f4bf8b2508d2d6f747e9df28b74d98 match and explicitly record the peer team freeze; saved artifacts and selected epoch 18 passed independent verification. Final selections are baseline U-Net++ epoch 48, R(2+1)D-18 epoch 15, R3D-18 epoch 18, and augmented U-Net++ epoch 32, all at threshold 0.5. No choices will change in response to this reused benchmark.",
+  "training_experiment_id": "unetpp_rd_aug_001_amp",
+  "selected_epoch": 32,
+  "checkpoint_sha256": "2e398e36340af01077fb900e3df522a048ad4b854e4812f0f070a4772fbbbaa5",
+  "training_config_digest": "4a955d96c4ef119838f9dfdfd480eb4ce020cfd63c68597a1b65bfada6e10215",
+  "training_run_fingerprint": "a5fd67e9f94964328f4c3f13c0f112f1386c348691f395a2387538ae7777cbb3",
+  "training_source": "bijaykhadka1710/unetpp-rd-aug-001-train-03",
+  "training_source_version": 1,
+  "training_epochs_completed": 50,
+  "selection_rule": "highest validation accuracy; earliest on ties",
+  "checkpoint_file": "best.pt",
+  "training_implementation_sha256": {
+    "unetpp_baseline": "5180b7022ecd54f3319fa0d780a992c95fa404a5ce8dbae15766db24eef3c5ed",
+    "unetpp_training": "7bc8a073d45e08a4c6d24595508be65f9596dbc50500f6dc6799bdc23d7fe2e1",
+    "unetpp_data": "e6e186ed51bd5b33260e09b7b7b64caea23f28103bbdcd3749125b44c30feb61",
+    "unetpp_kaggle": "fc39badd5f9e20377e3c3052200bf188df8e9c98ccd6a5ef5a1278cf14c5013d",
+    "video_cache": "83ce03c382213cfe1648299a8385c5be12f1cb6fd1844ea1e3124abf55f2957b",
+    "comparison_export": "0f7d133fc466c93abe87dd670dbe1b2351b5c38cf82b5547cbc441190e916747",
+    "video_augmentation": "0f56ab1b706aa6fd8e153d7b60697c2b27e4ad61e00f257848be64adeb5a8dff",
+    "augmentation_preview": "dc3ae28f4d5af9662600afd810be972d2240a552818c94cfca23666969814aab"
+  },
+  "training_runtime": {
+    "python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]",
+    "torch": "2.11.0+cu128",
+    "numpy": "2.1.3",
+    "opencv": "4.14.0",
+    "pandas": "2.3.3",
+    "sklearn": "1.6.1",
+    "huggingface_hub": "1.29.0",
+    "cuda": "12.8",
+    "cudnn": 91900,
+    "gpu": "Tesla T4",
+    "cpu_torch_threads": 2,
+    "cudnn_benchmark": false,
+    "matmul_tf32": false,
+    "cudnn_tf32": false
+  },
+  "dataset_revision": "7867e2504ed3845a46ff7790a2f8c3ffcdc08947",
+  "task": "non_rd_vs_rd",
+  "positive_class": "rd",
+  "threshold": 0.5,
+  "precision": "16-mixed",
+  "physical_batch": 4,
+  "preprocessing_identity": {
+    "preprocessing": {
+      "num_frames": 96,
+      "height": 128,
+      "width": 128,
+      "grayscale": "arithmetic channel mean",
+      "padding": "symmetric zero padding to square",
+      "resize": "full time/spatial trilinear interpolation",
+      "align_corners": false,
+      "normalization": "divide by 255",
+      "dtype": "float32",
+      "layout": "B,C,D,H,W",
+      "frame_subsampling": false,
+      "augmentation": "none",
+      "roundoff_tolerance": 1e-06
+    },
+    "implementation": "5180b7022ecd54f3319fa0d780a992c95fa404a5ce8dbae15766db24eef3c5ed",
+    "torch": "2.11.0+cpu",
+    "opencv": "4.14.0",
+    "numpy": "2.1.3"
+  },
+  "test_cache": {
+    "source": "bijaykhadka1710/unetpp-rd-002-test-inputs",
+    "source_version": 1,
+    "preparation_evaluation_id": "unetpp_rd_002_test",
+    "preparation_freeze_digest": "33c392efdd3cc0bb34c799a692f0411aa1711970e25c31ca49fc9d76db652b49"
+  },
+  "test_clips": 1077,
+  "test_label_counts": {
+    "0": 977,
+    "1": 100
+  },
+  "test_accessed_at_freeze": false,
+  "benchmark_label": "reused official test benchmark",
+  "test_policy": "single frozen-checkpoint evaluation; clean inputs; no augmentation, optimizer, calibration, threshold search or checkpoint selection",
+  "reference_test_rows": [
+    {
+      "source": "U-Net++ epoch 48 (bijaykhadka1710/unetpp-rd-002-test-evaluation/1, verified)",
+      "partition": "reused official test benchmark",
+      "TP": 86,
+      "TN": 964,
+      "FP": 13,
+      "FN": 14,
+      "sensitivity": 0.86,
+      "specificity": 0.986694,
+      "precision": 0.868687,
+      "F1": 0.864322,
+      "accuracy": 0.97493,
+      "balanced_accuracy": 0.923347,
+      "average_precision": 0.926845,
+      "ROC_AUC": 0.986858
+    }
+  ],
+  "disclosures": [
+    "Both U-Net++ runs completed 50 epochs with matched settings/runtime; selected augmented epoch is 32, baseline epoch is 48.",
+    "Validation did not improve with this augmentation policy; retain the negative result and every benchmark result.",
+    "Training-only transforms are disabled for validation/test. Cached preprocessing is unchanged.",
+    "Official test scores already exist at project level. This is benchmark reuse, not an untouched holdout.",
+    "One seed; possible same-patient overlap in clip-level splits; no clinical or unseen-patient validation claim."
+  ]
+}

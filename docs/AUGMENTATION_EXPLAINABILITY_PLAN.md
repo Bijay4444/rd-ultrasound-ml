@@ -6,6 +6,17 @@ cache integration, selection, test reuse and team schedule. The minimum is one
 training-only augmentation experiment plus checked explanations of the frozen
 baseline. Extend explanations to the peer models after their checkpoints arrive.
 
+Completion update, 2026-11-22: all 50 augmentation epochs and the single frozen
+test evaluation have completed and passed verification. The
+[four-model comparison](FINAL_MODEL_COMPARISON.md) separates selection validation
+from the reused test benchmark. The augmentation module, fixed training previews,
+standalone notebook and separate config are implemented. Preview review reduced
+the initial affine ranges below to ±3° rotation, ±1% translation and scale
+0.98–1.02 before augmentation training. See
+[implementation evidence and training status](UNETPP_AUGMENTATION_RESULTS.md).
+The original proposal remains below as the protocol history. Completed explanation
+evidence is recorded separately in [EXPLAINABILITY_RESULTS.md](EXPLAINABILITY_RESULTS.md).
+
 ## Augmentation: one interpretable comparison
 
 Question: **Under the same training recipe, how does mild training-only
