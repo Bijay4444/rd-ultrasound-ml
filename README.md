@@ -95,6 +95,8 @@ separate validation and reused official test tables for baseline U-Net++,
 R3D-18, R(2+1)D-18 and augmented U-Net++. See the
 [augmentation results](docs/UNETPP_AUGMENTATION_RESULTS.md) and
 [R3D-18 provenance audit](docs/R3D18_VERIFICATION.md) for the completed handoffs.
+The [integration workflow](docs/FINAL_INTEGRATION_WORKFLOW.md) records the safe
+branch/merge order and the remaining R3D-18 validation Grad-CAM work.
 
 The [Grad-CAM execution guide](docs/EXPLAINABILITY_RESULTS.md) describes the
 completed frozen-model validation workflow and its verified artifacts. The
