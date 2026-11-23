@@ -1,9 +1,56 @@
 # R3D-18 validation Grad-CAM extension
 
-Status, 2026-11-22: the checked extension was submitted as private Kaggle job
-`bijaykhadka1710/rd-gradcam-r3d18-validation-001/1`. Saved-output verification
-and the real three-model demo are pending completion. No new training or
-official-test evaluation is part of this workflow.
+Completed 2026-11-22 (local date). Private Kaggle job
+`bijaykhadka1710/rd-gradcam-r3d18-validation-001/1` completed all eight cases and
+passed the saved-output audit. All **127 new artifact hashes** and the historical
+225 hashes match. All **40 attribution arrays** (two targets and three
+randomization stages per case) passed shape, finite-value and applicable
+normalization checks. No new training or official-test evaluation occurred.
+
+Archive SHA256:
+`6fb4ac07dac3304846ad95d8be6b8b3db3dc0db894a17c95622ef5fc2f08afce`.
+Ignored archive and audit: `outputs/kaggle_results/gradcam_r3d18_validation_001/`,
+with `audit/verification.json` and checked extraction under `audit/verified/`.
+
+## Verified findings
+
+- Exact historical-runtime pin: Tesla T4, Python 3.13.16, torch 2.11.0+cu130,
+  torchvision 0.26.0+cu130, CUDA 13.0. Total 1,035.77 seconds (17.26 minutes),
+  including two full cache-integrity passes; this is not forward-only timing.
+- All eight original-precision probabilities exactly match saved validation
+  probabilities. Maximum FP32-versus-original probability difference is 0.000875.
+  Displayed explanation probabilities are explicitly FP32.
+- Final feature shape `[1,512,12,8,8]`; maximum measured allocated GPU memory
+  1,627,598,848 bytes (1.63 GB). Model state/prediction preservation gates passed.
+- RD attribution is constant zero on `164267_00003`, `164267_00005` and
+  `164267_00944`. High/low occlusion ranking is uninformative on these maps.
+- Among the five nonconstant RD maps, masking high-attribution regions produces
+  a greater mean RD-logit drop than low-attribution masking in **5/5** cases and
+  greater than random masking in **4/5**. On `755384_00001`, random exceeds high.
+  These are descriptive controls on a small outcome-stratified panel.
+- For `405744_00014`, cumulative randomization correlations are -0.470 after
+  head reset, -0.352 after head plus final block, and -0.343 after all learned
+  layers. All control outputs are retained, including undefined correlations
+  for constant maps; no single statistic certifies anatomical correctness.
+
+| Clip | Dataset label | FP32 RD score | Outcome at 0.5 |
+| --- | --- | ---: | --- |
+| 102769_00005 | RD | 39.13% | Missed RD |
+| 102769_00009 | RD | 98.71% | Correct RD |
+| 164267_00003 | non-RD | 1.64% | Correct non-RD |
+| 164267_00005 | non-RD | 2.20% | Correct non-RD |
+| 164267_00944 | non-RD | 1.19% | Correct non-RD |
+| 164267_01736 | non-RD | 45.73% | Correct non-RD |
+| 405744_00014 | RD | 86.80% | Correct RD |
+| 755384_00001 | RD | 2.76% | Missed RD |
+
+The first audit incorrectly required `1e-12` agreement for a saved float32
+mean-absolute-difference reduction. NumPy 2.5.4 locally versus 2.1.3 on Kaggle
+gave differences up to one float32 epsilon (1.19e-7). The auditor now accumulates
+the same float32 differences in float64 and allows two float32 epsilons
+(2.38e-7) for that saved statistic. Correlations retain `1e-12` tolerance; file
+and source hashes remain exact. No saved array, control, model or training
+implementation was changed.
 
 ## Frozen model and original examples
 
@@ -67,6 +114,19 @@ arrays and normalization, fixed occlusion arithmetic and randomized-map
 similarity. It does not rerun model inference. The viewer checks case/method/
 cache/algorithm equality before combining archives, and preserves both sources'
 hashes in its provenance record. Large generated artifacts remain ignored.
+
+Commands run (with the documented uv prefix for the NumPy verifier):
+
+```bash
+python scripts/verify_r3d18_explanations.py --archive outputs/kaggle_results/gradcam_r3d18_validation_001/gradcam_r3d18_validation_001.zip --output outputs/kaggle_results/gradcam_r3d18_validation_001/audit
+python scripts/build_explainability_demo.py --archive outputs/kaggle_results/gradcam_validation_001/gradcam_validation_001.zip --additional-archive outputs/kaggle_results/gradcam_r3d18_validation_001/gradcam_r3d18_validation_001.zip --output outputs/presentation/gradcam_demo_three_models
+```
+
+All **22 explanation/viewer CPU tests** passed, including the original 14,
+five R3D extension checks and three archive/viewer checks. Python compilation
+and `git diff --check` passed. The Impeccable detector reported no findings.
+The unrelated repository suite was not rerun. Real-output browser checks are
+documented in [EXPLAINABILITY_DEMO.md](EXPLAINABILITY_DEMO.md).
 
 ## Interpretation
 

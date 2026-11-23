@@ -1,8 +1,13 @@
 # Frozen-model explainability
 
-Status: **completed and downloaded** for both frozen models on all eight fixed
+The original two-model run below is **completed and downloaded** on all eight fixed
 validation clips. All 225 saved artifact hashes were independently checked from
 the results ZIP. No training or final-test evaluation was performed.
+
+Update, 2026-11-22: frozen R3D-18 epoch 18 also completed the same eight cases.
+Its 127 new artifact hashes and 40 attribution arrays passed the separate
+[extension audit](R3D18_EXPLAINABILITY_RESULTS.md). The default demo now displays
+all three models with the original two-model outputs reused unchanged.
 
 Private Kaggle version 1 was submitted successfully at
 [RD Grad-CAM Validation 001](https://www.kaggle.com/code/bijaykhadka1710/rd-gradcam-validation-001).
@@ -138,9 +143,11 @@ control outputs are complete. A matched example was visually inspected. An
 exhaustive anatomical review of all maps has not been performed. Controls are
 mixed; preserve those findings when presenting the examples.
 
-R3D-18 can join through `ModelAdapter(name, factory, layer, head, freeze)` once
-its verified training artifacts and comparison freeze are available; the shared
-comparison cache verifier must accept that freeze. Keep the same eight cases.
+R3D-18 has now been integrated through the existing adapter with frozen epoch
+18, `backbone.layer4` and `backbone.fc`. Its separately pinned extension explains
+only the new model on the same eight cases and reuses these original results.
+See [R3D18_EXPLAINABILITY_RESULTS.md](R3D18_EXPLAINABILITY_RESULTS.md) for the
+current execution status, verification and three-model presentation delivery.
 
 Method references: [Grad-CAM](https://arxiv.org/abs/1610.02391),
 [Sanity Checks for Saliency Maps](https://arxiv.org/abs/1810.03292).

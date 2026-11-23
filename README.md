@@ -104,8 +104,10 @@ completed frozen-model validation workflow and its verified artifacts. The
 page and speaking script. Run
 `uv --cache-dir /tmp/dmml-uv-cache run python scripts/build_explainability_notebook.py`
 to rebuild the standalone Kaggle notebook.
-U-Net++ and R(2+1)D-18 have completed training, evaluation and the eight-case
-validation explanation run. Attribution controls have mixed findings.
+U-Net++, R(2+1)D-18 and R3D-18 have completed training, evaluation and the same
+eight-case validation explanation panel. The default offline demo now includes
+all three; see [the R3D-18 extension audit](docs/R3D18_EXPLAINABILITY_RESULTS.md).
+Attribution controls have mixed findings.
 
 ## Citation and attribution
 

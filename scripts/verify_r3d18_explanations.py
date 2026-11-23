@@ -65,6 +65,7 @@ def verify(archive_path, reference_archive, training, output):
                     and predictions['dataset_labels'][index]==case['label'],'Original saved validation probability')
             require(abs(p['original_precision_probability']-p['saved_probability'])<=.001,'Historical probability parity')
             require(row['fp32_probability']==p['fp32_probability'],'FP32 score record')
+            require(len(row['maps'])==2,'Both attribution targets')
             outcome=('TP' if p['fp32_probability']>=.5 else 'FN') if case['label'] else ('FP' if p['fp32_probability']>=.5 else 'TN')
             require(row['outcome']==outcome,'Fixed-threshold case outcome')
             for target,sign,record in zip(('rd','non_rd'),(1,-1),row['maps']):
@@ -85,6 +86,7 @@ def verify(archive_path, reference_archive, training, output):
             occlusion,randomization=read(key+'occlusion.json'),read(key+'randomization.json')
             require(occlusion['cuboid']==[12,16,16] and occlusion['count']==8 and occlusion['seed']==42,
                     'Fixed occlusion configuration')
+            require(set(occlusion['groups'])=={'high','low','random'},'All occlusion groups')
             for group,record in occlusion['groups'].items():
                 require(len(record['interventions'])==8,'Eight occlusions per group')
                 drops=[occlusion['baseline_logit']-r['logit'] for r in record['interventions']]
@@ -99,13 +101,18 @@ def verify(archive_path, reference_archive, training, output):
                     a,b=rd_reference.ravel(),arrays['normalized'].ravel()
                     correlation=None if np.std(a)<1e-12 or np.std(b)<1e-12 else float(np.corrcoef(a,b)[0,1])
                     saved=r['similarity']
+                    # The GPU notebook saves a NumPy float32 reduction. Sum the
+                    # same differences in float64 here and allow two float32
+                    # epsilons for that saved reduction across NumPy builds.
+                    mad=float(np.abs(a-b).mean(dtype=np.float64))
                     require((saved['pearson'] is None if correlation is None else saved['pearson'] is not None
                             and np.isclose(correlation,saved['pearson'],rtol=0,atol=1e-12))
-                            and np.isclose(float(np.abs(a-b).mean()),saved['mean_absolute_difference'],rtol=0,atol=1e-12),
+                            and np.isclose(mad,saved['mean_absolute_difference'],rtol=0,atol=2*np.finfo(np.float32).eps),
                             'Recomputed map similarity')
                 maps_checked+=1
             controls.append({'clip_id':case['clip_id'],'constant_rd_map':occlusion['constant_map'],
                              **{k:v['mean_drop'] for k,v in occlusion['groups'].items()}})
+        require(maps_checked==40,'All target and randomization arrays checked')
         output.mkdir(parents=True,exist_ok=False)
         for name in [*hashes,'artifact_sha256.json']:
             destination=output/'verified'/prefix/name
@@ -119,6 +126,7 @@ def verify(archive_path, reference_archive, training, output):
             'max_fp32_probability_difference':max(p['fp32_vs_original'] for p in parity),
             'peak_allocated_bytes':max(r['peak_allocated_bytes'] for r in rows),
             'runtime':read('runtime.json'),'seconds':status['seconds'],'controls':controls,
+            'saved_float32_mean_absolute_difference_tolerance':float(2*np.finfo(np.float32).eps),
             'model_inference_performed_by_audit':False,'official_test_data_used':False}
         (output/'verification.json').write_text(json.dumps(report,indent=2)+'\n')
         print(json.dumps(report,indent=2))

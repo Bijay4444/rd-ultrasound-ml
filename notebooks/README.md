@@ -223,6 +223,14 @@ unaugmented test cache. Saved results and the
 [four-model comparison](../docs/FINAL_MODEL_COMPARISON.md) are verified; do not
 resubmit it to select a threshold or improve the reported score.
 
+The [R3D-18 validation explanation notebook](kaggle_r3d18_explainability.ipynb)
+extends the original Grad-CAM panel with frozen epoch 18. It checks the same
+eight cases against the baseline-derived selection and explains only R3D-18;
+earlier explanations are reused in the local viewer. Build with
+`scripts/build_r3d18_explainability_notebook.py` and prepare the private pinned
+job with `scripts/prepare_r3d18_explainability_job.py`. See
+[the execution and verification record](../docs/R3D18_EXPLAINABILITY_RESULTS.md).
+
 
 ## After 50 epochs: frozen official-test evaluation
 
