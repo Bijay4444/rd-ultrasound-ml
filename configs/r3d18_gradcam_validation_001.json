@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "run_id": "gradcam_r3d18_validation_001",
+  "reference_archive_sha256": "1ea45de9e39b4243958c8acef1a62aac56ede3ed9083ac5fdaac6e7f0c37d335",
+  "selection": {
+    "partition": "validation",
+    "rule": "two per baseline outcome, clip ID ascending",
+    "cases": [
+      {
+        "validation_index": 385,
+        "clip_id": "102769_00005",
+        "label": 1,
+        "baseline_outcome": "TP"
+      },
+      {
+        "validation_index": 197,
+        "clip_id": "102769_00009",
+        "label": 1,
+        "baseline_outcome": "TP"
+      },
+      {
+        "validation_index": 292,
+        "clip_id": "164267_00003",
+        "label": 0,
+        "baseline_outcome": "TN"
+      },
+      {
+        "validation_index": 33,
+        "clip_id": "164267_00005",
+        "label": 0,
+        "baseline_outcome": "TN"
+      },
+      {
+        "validation_index": 286,
+        "clip_id": "164267_00944",
+        "label": 0,
+        "baseline_outcome": "FP"
+      },
+      {
+        "validation_index": 60,
+        "clip_id": "164267_01736",
+        "label": 0,
+        "baseline_outcome": "FP"
+      },
+      {
+        "validation_index": 52,
+        "clip_id": "405744_00014",
+        "label": 1,
+        "baseline_outcome": "FN"
+      },
+      {
+        "validation_index": 295,
+        "clip_id": "755384_00001",
+        "label": 1,
+        "baseline_outcome": "FN"
+      }
+    ]
+  },
+  "explain_models": [
+    "r3d18"
+  ],
+  "method": "same FP32 RD-logit/non-RD-logit Grad-CAM and controls as gradcam_validation_001; clean validation inputs only"
+}

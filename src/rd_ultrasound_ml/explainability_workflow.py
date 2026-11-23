@@ -72,8 +72,13 @@ def prediction_record(directory, validation):
     return probabilities
 
 
-def run_explanations(input_root, output_root, adapters, sources, device='cuda', runtime=None):
-    """Adapters are ordered baseline first; fresh output path prevents mixed artifacts."""
+def run_explanations(input_root, output_root, adapters, sources, device='cuda', runtime=None,
+                     explain_models=None, expected_cases=None):
+    """Verify all adapters, select by baseline, then explain the requested models.
+
+    A subset adds a model to an existing fixed panel without recomputing earlier
+    explanations. Expected cases must equal the baseline-derived panel in full.
+    """
     started = time.perf_counter()
     output = Path(output_root)
     output.mkdir(parents=True, exist_ok=False)
@@ -82,6 +87,11 @@ def run_explanations(input_root, output_root, adapters, sources, device='cuda', 
     try:
         if not adapters or adapters[0].name != 'unetpp' or len({a.name for a in adapters}) != len(adapters):
             raise ValueError('Require U-Net++ first and unique model adapter names')
+        names = [a.name for a in adapters]
+        requested = names if explain_models is None else list(explain_models)
+        if not requested or len(set(requested)) != len(requested) or not set(requested) <= set(names):
+            raise ValueError('Require a nonempty unique subset of verified model adapters')
+        explained = [a for a in adapters if a.name in requested]
         if device == 'cuda' and not torch.cuda.is_available():
             raise RuntimeError('Attach a CUDA GPU; no automatic precision/resolution fallback')
         torch.set_num_threads(2)
@@ -114,17 +124,22 @@ def run_explanations(input_root, output_root, adapters, sources, device='cuda', 
             directories[adapter.name], configs[adapter.name] = directory, config
             predictions[adapter.name] = prediction_record(directory, validation)
         cases = select_cases(validation, predictions[adapters[0].name])
+        if expected_cases is not None and cases != expected_cases:
+            raise ValueError('Baseline-derived cases differ from the fixed historical panel')
         save_json(output/'selection_manifest.json', {'partition': 'validation', 'rule': 'two per baseline outcome, clip ID ascending', 'cases': cases})
         validation.to_csv(output/'validation_manifest.csv', index=False)
         save_json(output/'settings.json', {'precision': 'float32', 'parity_tolerance': .001,
                   'threshold': .5, 'normalization': 'whole volume min-max, constant maps zero',
                   'cuboid': [12, 16, 16], 'occlusions_per_group': 8, 'seed': 42,
                   'preparation_fingerprint': fingerprint, 'preprocessing_identity': identity})
+        save_json(output/'verified_models.json', {'verified': names,
+                  'explained': [a.name for a in explained],
+                  'fixed_historical_cases_checked': expected_cases is not None})
         source_dir = output/'sources'; source_dir.mkdir()
         for name, source in sources.items():
             (source_dir/(name+'.py')).write_text(source)
         rows, control_rows = [], []
-        for adapter in adapters:
+        for adapter in explained:
             directory, freeze = directories[adapter.name], adapter.freeze
             model_dir = output/adapter.name; model_dir.mkdir()
             save_json(model_dir/'freeze.json', freeze)
@@ -200,7 +215,7 @@ def run_explanations(input_root, output_root, adapters, sources, device='cuda', 
         from PIL import Image
         matched = output/'matched_panels'; matched.mkdir()
         for case in cases:
-            panels = [Image.open(output/a.name/case['clip_id']/'panel.png').convert('RGB') for a in adapters]
+            panels = [Image.open(output/a.name/case['clip_id']/'panel.png').convert('RGB') for a in explained]
             canvas = Image.new('RGB', (max(p.width for p in panels), sum(p.height for p in panels)), 'white')
             offset = 0
             for panel in panels:
