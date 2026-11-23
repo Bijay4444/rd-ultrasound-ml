@@ -3,6 +3,7 @@
 No training, inference, network requests or third-party Python packages.
 """
 import argparse
+from contextlib import ExitStack
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
@@ -22,7 +23,7 @@ label{display:grid;gap:4px;font-size:14px;font-weight:650;min-width:0}select,but
 button:hover{background:#dbe9ed}button:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible,.details-body:focus-visible{outline:3px solid var(--accent);outline-offset:3px}button:disabled{color:var(--muted);background:#e8eeee;cursor:default}
 #fullscreen{background:#dbe9ed}.case-info{margin:0 0 12px}.case-heading{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}#truth{font-size:17px;font-weight:650;margin:0}.case-meta{font-size:14px;color:var(--muted);margin:0;font-variant-numeric:tabular-nums}
 #talk{max-width:none;margin:4px 0 0;color:var(--muted);font-size:14px}
-.comparison{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;min-height:0}.model{background:white;padding:12px;min-width:0;min-height:0}.prediction{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px;margin-top:5px}.outcome{font-size:16px;font-weight:650;margin:0}.meta{font-size:15px;margin:0;font-variant-numeric:tabular-nums}.media{min-width:0;min-height:0}.model img{display:block;width:100%;height:auto}.caption{font-size:14px;color:var(--muted);max-width:none;margin:10px 0}
+.comparison{display:grid;grid-template-columns:repeat(var(--model-count,2),minmax(0,1fr));gap:16px;min-height:0}.model{background:white;padding:12px;min-width:0;min-height:0}.prediction{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px;margin-top:5px}.outcome{font-size:16px;font-weight:650;margin:0}.meta{font-size:15px;margin:0;font-variant-numeric:tabular-nums}.media{min-width:0;min-height:0}.model img{display:block;width:100%;height:auto}.caption{font-size:14px;color:var(--muted);max-width:none;margin:10px 0}
 .support{position:relative;display:flex;flex-wrap:wrap;align-items:start;gap:8px 24px;border-top:1px solid var(--line);padding-top:4px}details{min-width:0}details[open]{flex-basis:100%}summary{cursor:pointer;font-size:14px;font-weight:650;min-height:44px;align-content:center}.details-body{padding:0 4px 8px;font-size:15px;scrollbar-color:#829ba3 #e8eeee;scrollbar-width:thin}.details-body p{margin:6px 0 10px}
 table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}th,td{text-align:left;padding:6px;border-bottom:1px solid var(--line)}
 a{color:var(--accent);text-underline-offset:3px}::selection{background:#c1dce4;color:#122d35}footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;font-size:14px;color:var(--muted);margin-top:8px}#error{color:#9c2020;max-width:none}#error:empty{display:none}
@@ -60,7 +61,7 @@ a{color:var(--accent);text-underline-offset:3px}::selection{background:#c1dce4;c
 <script>
 const data=JSON.parse(document.getElementById('data').textContent);
 const select=document.getElementById('case'),view=document.getElementById('view');
-const names={unetpp:'U-Net++ · epoch 48',r2plus1d18:'R(2+1)D-18 · epoch 15'};
+const names=data.model_labels;
 const meanings={TP:'Correct RD detection',TN:'Correct non-RD prediction',FP:'False alarm',FN:'Missed RD'};
 for(const c of data.cases){const o=document.createElement('option');o.value=c.clip_id;o.textContent=c.clip_id+' · baseline '+c.baseline_outcome;select.append(o)}
 if(data.cases.some(c=>c.clip_id==='405744_00014'))select.value='405744_00014';
@@ -68,7 +69,7 @@ function update(){const c=data.cases.find(c=>c.clip_id===select.value),rows=data
 document.getElementById('truth').textContent='Dataset label: '+(c.label?'RD':'non-RD')+' · Clip '+c.clip_id;
 document.getElementById('position').textContent='Case '+(select.selectedIndex+1)+' of '+select.options.length;
 document.getElementById('talk').textContent=data.notes[c.clip_id]||'Compare the same clip across models. Describe the prediction first, then the regions contributing to the selected score. Avoid inferring anatomical correctness from the heatmap.';
-document.getElementById('error').textContent='';const container=document.getElementById('comparison');container.replaceChildren();
+document.getElementById('error').textContent='';const container=document.getElementById('comparison');container.replaceChildren();container.style.setProperty('--model-count',rows.length);
 rows.forEach(r=>{const box=document.createElement('section');box.className='model';const heading=document.createElement('h2');heading.id='heading-'+r.model;heading.textContent=names[r.model];box.setAttribute('aria-labelledby',heading.id);const prediction=document.createElement('div');prediction.className='prediction';const desc=document.createElement('p');desc.className='outcome';desc.textContent=meanings[r.outcome];const meta=document.createElement('p');meta.className='meta';meta.textContent='RD score '+(100*r.fp32_probability).toFixed(2)+'%';prediction.append(desc,meta);const media=document.createElement('div');media.className='media';const img=document.createElement('img');img.src='assets/'+r.model+'/'+c.clip_id+'/'+view.value;img.alt=names[r.model]+' '+view.options[view.selectedIndex].text+' for '+c.clip_id;img.onerror=()=>{document.getElementById('error').textContent='An image is missing. Extract the entire demo ZIP and keep index.html beside the assets folder.'};media.append(img);box.append(heading,prediction,media);container.append(box)});
 const oc=document.getElementById('occlusion'),rand=document.getElementById('randomization');oc.replaceChildren();rand.replaceChildren();const constants=[];
 data.models.forEach(m=>{const record=data.controls[m+'/'+c.clip_id],r=document.createElement('tr');for(const value of [names[m],...['high','low','random'].map(g=>record.occlusion.groups[g].mean_drop.toFixed(4))]){const td=document.createElement('td');td.textContent=value;r.append(td)}oc.append(r);
@@ -127,48 +128,115 @@ open, show those images and use the same script. No live inference is needed.
 '''
 
 
-def build(archive_path, output):
+def verified_archive(archive):
+    """Stream-check every member before reading records or copying display assets."""
+    names = archive.namelist()
+    if len(names) != len(set(names)) or any(PurePosixPath(n).is_absolute() or '..' in PurePosixPath(n).parts for n in names):
+        raise ValueError('Unsafe or duplicate archive members')
+    manifests = [n for n in names if n.count('/') == 1 and n.endswith('/artifact_sha256.json')]
+    if len(manifests) != 1:
+        raise ValueError('Require one explanation artifact manifest')
+    prefix = manifests[0].rsplit('/', 1)[0] + '/'
+    hashes = json.loads(archive.read(manifests[0]))
+    if set(names) != {prefix+n for n in hashes} | {prefix+'artifact_sha256.json'}:
+        raise ValueError('Archive membership differs from manifest')
+    for name, digest in hashes.items():
+        h = hashlib.sha256()
+        with archive.open(prefix+name) as stream:
+            for block in iter(lambda: stream.read(1024*1024), b''): h.update(block)
+        if h.hexdigest() != digest:
+            raise ValueError('Checksum differs: '+name)
+    return prefix, hashes
+
+
+def file_sha(path):
+    h = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for block in iter(lambda: stream.read(1024*1024), b''): h.update(block)
+    return h.hexdigest()
+
+
+def build(archive_path, output, additional_archives=None):
     output = Path(output)
-    output.mkdir(parents=True, exist_ok=False)
-    with zipfile.ZipFile(archive_path) as archive:
-        names = archive.namelist()
-        prefix = 'gradcam_validation_001/'
-        if len(names) != len(set(names)) or any(PurePosixPath(n).is_absolute() or '..' in PurePosixPath(n).parts for n in names):
-            raise ValueError('Unsafe or duplicate archive members')
-        hashes = json.loads(archive.read(prefix+'artifact_sha256.json'))
-        if set(names) != {prefix+n for n in hashes} | {prefix+'artifact_sha256.json'}:
-            raise ValueError('Archive membership differs from manifest')
-        for name, digest in hashes.items():
-            h = hashlib.sha256()
-            with archive.open(prefix+name) as stream:
-                for block in iter(lambda: stream.read(1024*1024), b''): h.update(block)
-            if h.hexdigest() != digest: raise ValueError('Checksum differs: '+name)
-        def read(name): return json.loads(archive.read(prefix+name))
-        status = read('status.json')
-        if status['status'] != 'completed' or len(status['cases']) != 16:
-            raise ValueError('Require completed two-model eight-case results')
-        cases, results = read('selection_manifest.json')['cases'], read('case_results.json')
-        models = ['unetpp', 'r2plus1d18']
-        controls = {}
+    sources = [Path(archive_path), *map(Path, additional_archives or [])]
+    cases = None
+    results, models, controls, evidence, labels, locations = [], [], {}, [], {}, {}
+    known = {'unetpp':'U-Net++', 'r2plus1d18':'R(2+1)D-18', 'r3d18':'R3D-18'}
+    settings = algorithm = None
+    with ExitStack() as stack:
+        for path in sources:
+            archive = stack.enter_context(zipfile.ZipFile(path))
+            prefix, hashes = verified_archive(archive)
+            def read(name): return json.loads(archive.read(prefix+name))
+            selection, status = read('selection_manifest.json'), read('status.json')
+            selected = selection['cases']
+            current = list(status['models'])
+            if (status['status'] != 'completed' or selection['partition'] != 'validation'
+                    or len(selected) != 8 or len({c['clip_id'] for c in selected}) != 8
+                    or not current or set(current) - set(known) or set(current) & set(models)
+                    or any(status['models'][m]['status'] != 'completed' for m in current)):
+                raise ValueError('Require completed, distinct models on eight validation cases')
+            pairs = {(m,c['clip_id']) for m in current for c in selected}
+            rows = read('case_results.json')
+            if (len(rows) != len(pairs) or {(r['model'],r['clip_id']) for r in rows} != pairs
+                    or len(status['cases']) != len(pairs)
+                    or {(r['model'],r['clip_id']) for r in status['cases'] if r['status']=='completed'} != pairs):
+                raise ValueError('Incomplete or duplicate model/case records')
+            method = read('settings.json')
+            code = archive.read(prefix+'sources/video_explainability.py')
+            if cases is None:
+                cases, settings, algorithm = selected, method, code
+                if current != ['unetpp','r2plus1d18']:
+                    raise ValueError('Start with the historical two-model comparison')
+            elif selected != cases or method != settings or code != algorithm:
+                raise ValueError('Extension changes fixed cases, attribution method or cache identity')
+            for model in current:
+                freeze = read(model+'/freeze.json')
+                if freeze['threshold'] != .5:
+                    raise ValueError('Model threshold differs from the fixed protocol')
+                labels[model] = known[model]+' · epoch '+str(freeze['selected_epoch'])
+                locations[model] = (archive,prefix)
+                for case in selected:
+                    key = model+'/'+case['clip_id']
+                    controls[key] = {'occlusion':read(key+'/occlusion.json'),
+                                     'randomization':read(key+'/randomization.json')}
+            results.extend(rows)
+            models.extend(current)
+            evidence.append({'archive_sha256':file_sha(path),'verified_artifacts':len(hashes),
+                             'models':current,'runtime':read('runtime.json')})
+        if additional_archives:
+            plan = json.loads((Path(__file__).resolve().parents[1]/'configs/r3d18_gradcam_validation_001.json').read_text())
+            if (evidence[0]['archive_sha256'] != plan['reference_archive_sha256']
+                    or cases != plan['selection']['cases'] or models != ['unetpp','r2plus1d18','r3d18']):
+                raise ValueError('Historical archive or extension identity differs from the fixed plan')
+        output.mkdir(parents=True, exist_ok=False)
         for model in models:
+            archive,prefix = locations[model]
             for case in cases:
                 key = model+'/'+case['clip_id']
-                controls[key] = {'occlusion': read(key+'/occlusion.json'), 'randomization': read(key+'/randomization.json')}
-                for filename in ('panel.png', 'temporal.png', 'rd_overlay.gif', 'non_rd_overlay.gif'):
+                for filename in ('panel.png','temporal.png','rd_overlay.gif','non_rd_overlay.gif'):
                     target = output/'assets'/key/filename
                     target.parent.mkdir(parents=True, exist_ok=True)
                     target.write_bytes(archive.read(prefix+key+'/'+filename))
-        data = {'cases': cases, 'results': results, 'models': models, 'controls': controls,
-                'notes': {'405744_00014': 'An RD clip missed by U-Net++ and detected by R(2+1)D-18. Inspect both maps without treating the highlighted regions as confirmed anatomy.',
-                          '102769_00005': 'The reverse case: U-Net++ detects RD, while R(2+1)D-18 misses it. Aggregate improvement does not guarantee better predictions on every clip.'}}
-        encoded = json.dumps(data).replace('<', '\\u003c')
-        (output/'index.html').write_text(TEMPLATE.replace('__DATA__', encoded))
-        (output/'speaker-notes.md').write_text(NOTES)
-        (output/'provenance.json').write_text(json.dumps({'archive_sha256': hashlib.sha256(Path(archive_path).read_bytes()).hexdigest(),
-                    'verified_artifacts': len(hashes), 'runtime': read('runtime.json')}, indent=2)+'\n')
-    with zipfile.ZipFile(output.with_suffix('.zip'), 'w', zipfile.ZIP_DEFLATED) as bundle:
+        data = {'cases':cases,'results':results,'models':models,'controls':controls,'model_labels':labels,
+                'notes':{'405744_00014':'U-Net++ misses this RD clip while R(2+1)D-18 detects it. Compare the saved predictions and maps for every displayed model.',
+                         '102769_00005':'U-Net++ detects this RD clip while R(2+1)D-18 misses it. Compare each model on the same input; aggregate performance does not guarantee a correct individual prediction.'}}
+        encoded = json.dumps(data).replace('<', chr(92)+'u003c')
+        (output/'index.html').write_text(TEMPLATE.replace('__DATA__',encoded))
+        notes = NOTES.replace('both model views','all model views')
+        if 'r3d18' in models:
+            notes += '\n## R3D-18 extension: frozen epoch 18\n\n'
+            notes += 'The same eight cases were verified before producing the new maps. Earlier model explanations are reused unchanged.\n\n'
+            for row in results:
+                if row['model']=='r3d18':
+                    notes += f"- {row['clip_id']}: RD score {100*row['fp32_probability']:.2f}%, outcome {row['outcome']}.\n"
+        (output/'speaker-notes.md').write_text(notes)
+        (output/'provenance.json').write_text(json.dumps({'sources':evidence,
+            'verified_artifacts':sum(e['verified_artifacts'] for e in evidence),
+            'models':models,'cases':len(cases),'reused_historical_explanations':bool(additional_archives)},indent=2)+'\n')
+    with zipfile.ZipFile(output.with_suffix('.zip'),'w',zipfile.ZIP_DEFLATED) as bundle:
         for path in sorted(output.rglob('*')):
-            if path.is_file(): bundle.write(path, str(path.relative_to(output.parent)))
+            if path.is_file(): bundle.write(path,str(path.relative_to(output.parent)))
     return output/'index.html'
 
 
@@ -176,5 +244,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--archive', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--additional-archive',type=Path,action='append',default=[])
     args = parser.parse_args()
-    print(build(args.archive, args.output))
+    print(build(args.archive, args.output, args.additional_archive))
