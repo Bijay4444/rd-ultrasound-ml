@@ -92,6 +92,29 @@ notebook/config/module embedding and private version-pinned submission bundles.
 All 62 tests pass. Synthetic inference/export verification is implementation
 evidence; it is not a real ERDES test result.
 
+`test_video_augmentation.py` and `test_augmentation_delivery.py` check training-only
+video augmentation: pixel-space affine oracles, temporal consistency, keyed RNG
+replay without changing global training RNG, input/label immutability, exact
+interrupted CPU training and optimizer resume, matched config, frozen sources,
+standalone notebook schema/embedding, private pinned bundles, and the actual
+training/validation/export notebook cells on synthetic CPU data. Together with
+`test_augmentation_continuation.py`, the 20 checks also reject corrupt archives
+before extraction and verify that failed jobs, failed audits or uncertain
+submissions cannot launch a later training job. The continuation test uses fake
+Kaggle responses and checks the 25/24-epoch handoff without allocating a GPU.
+
+`test_augmentation_analysis.py` adds four checks for aligned paired validation
+errors, invalid scores/labels, evaluation notebook freshness/schema and a
+confirmation gate that precedes test access, plus private version-pinned
+submission metadata. The augmentation suite totals 24 checks. The seven shared
+checks in `test_r2plus1d18_evaluation.py` also cover the model-agnostic evaluation
+helper reused by the augmented U-Net++ notebook.
+These checks
+need the existing CPU torch, pandas, scikit-learn, OpenCV, nbformat, matplotlib
+and Pillow stack. They never use ERDES test data or allocate a GPU. Run with
+`python -m unittest discover -s tests -p '*augmentation*.py' -v` in the isolated
+uv environment documented in `docs/UNETPP_AUGMENTATION_RESULTS.md`.
+
 
 `test_r2plus1d18.py` checks the R(2+1)D-18 comparison model: only the first stem
 convolution becomes one-channel (temporal stem and factorized blocks preserved),

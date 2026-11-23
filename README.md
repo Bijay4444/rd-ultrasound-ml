@@ -89,7 +89,21 @@ Teammate assignments and paste-ready Claude prompts are in the
 [R(2+1)D-18 handoff](docs/handoffs/R2PLUS1D18.md).
 Bijay's work is described in the
 [augmentation and explainability plan](docs/AUGMENTATION_EXPLAINABILITY_PLAN.md).
-These documents propose new work; only the existing U-Net++ result is complete.
+
+The [verified four-model comparison](docs/FINAL_MODEL_COMPARISON.md) now includes
+separate validation and reused official test tables for baseline U-Net++,
+R3D-18, R(2+1)D-18 and augmented U-Net++. See the
+[augmentation results](docs/UNETPP_AUGMENTATION_RESULTS.md) and
+[R3D-18 provenance audit](docs/R3D18_VERIFICATION.md) for the completed handoffs.
+
+The [Grad-CAM execution guide](docs/EXPLAINABILITY_RESULTS.md) describes the
+completed frozen-model validation workflow and its verified artifacts. The
+[classroom demo guide](docs/EXPLAINABILITY_DEMO.md) explains the offline comparison
+page and speaking script. Run
+`uv --cache-dir /tmp/dmml-uv-cache run python scripts/build_explainability_notebook.py`
+to rebuild the standalone Kaggle notebook.
+U-Net++ and R(2+1)D-18 have completed training, evaluation and the eight-case
+validation explanation run. Attribution controls have mixed findings.
 
 ## Citation and attribution
 

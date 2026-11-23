@@ -209,6 +209,20 @@ training output to resume the same fixed 50-epoch protocol. No Drive mount or
 final-test access is required. Saved output must finish successfully before it
 can be used to continue; an unsaved interrupted job can lose its current interval.
 
+The separate [kaggle_unetpp_augmentation.ipynb](kaggle_unetpp_augmentation.ipynb)
+adds mild, temporally consistent training-only affine/intensity transforms to a
+fresh U-Net++ run while validation remains clean. It reuses the original verified
+cache without changing the baseline identity or weights. See
+[the augmentation evidence and job instructions](../docs/UNETPP_AUGMENTATION_RESULTS.md).
+
+The separate [kaggle_unetpp_augmentation_evaluation.ipynb](kaggle_unetpp_augmentation_evaluation.ipynb)
+completed the single frozen epoch-32 test evaluation. Its builder is
+`scripts/prepare_augmentation_evaluation.py`; it requires a recorded team freeze,
+checks training identity/runtime before test access, and uses the original
+unaugmented test cache. Saved results and the
+[four-model comparison](../docs/FINAL_MODEL_COMPARISON.md) are verified; do not
+resubmit it to select a threshold or improve the reported score.
+
 
 ## After 50 epochs: frozen official-test evaluation
 

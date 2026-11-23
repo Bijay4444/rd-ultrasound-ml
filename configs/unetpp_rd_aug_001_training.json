@@ -1,0 +1,195 @@
+{
+  "experiment_id": "unetpp_rd_aug_001_amp",
+  "status": "frozen_training_protocol_not_a_result",
+  "scope": "one matched U-Net++ training-augmentation ablation; not an architecture comparison",
+  "reference_article": "https://arxiv.org/html/2508.04735v2",
+  "upstream_revision": "4af67e0b9f4667edbae75a64a819884ee14d7a3b",
+  "reference_experiment": "https://github.com/OSUPCVLab/ERDES/blob/4af67e0b9f4667edbae75a64a819884ee14d7a3b/configs/experiment/non_rd_vs_rd/unetplusplus.yaml",
+  "dataset_revision": "7867e2504ed3845a46ff7790a2f8c3ffcdc08947",
+  "task": "non_rd_vs_rd",
+  "label_mapping": {
+    "non_rd": 0,
+    "rd": 1
+  },
+  "seed": 42,
+  "model": {
+    "name": "released_UNetPlusPlus_encoder_classifier_equivalent",
+    "features": [
+      32,
+      32,
+      64,
+      128,
+      256
+    ],
+    "convolutions_per_block": 2,
+    "conv": {
+      "kernel_size": 3,
+      "stride": 1,
+      "padding": 1,
+      "bias": true
+    },
+    "downsampling": "four MaxPool3d(kernel_size=2,stride=2)",
+    "normalization": "InstanceNorm3d(eps=1e-5,momentum=0.1,affine=True,track_running_stats=False)",
+    "activation": "LeakyReLU(negative_slope=0.1,inplace=True)",
+    "dropout": 0.0,
+    "head": "AdaptiveAvgPool3d(1), Linear(256,128), ReLU, Linear(128,1)",
+    "expected_parameter_count": 3603553,
+    "pretrained": false
+  },
+  "preprocessing": {
+    "num_frames": 96,
+    "height": 128,
+    "width": 128,
+    "grayscale": "arithmetic channel mean",
+    "padding": "symmetric zero padding to square",
+    "resize": "full time/spatial trilinear interpolation",
+    "align_corners": false,
+    "normalization": "divide by 255",
+    "dtype": "float32",
+    "layout": "B,C,D,H,W",
+    "frame_subsampling": false,
+    "augmentation": "none",
+    "roundoff_tolerance": 1e-06
+  },
+  "evaluation": {
+    "positive_class": "rd",
+    "threshold": 0.5,
+    "reference_test_clips": 1077,
+    "unetpp_metrics": [
+      "sensitivity",
+      "specificity",
+      "precision",
+      "F1",
+      "accuracy"
+    ],
+    "test_policy": "no test access in training; choices frozen using validation; any later official-test analysis must disclose the previously exposed benchmark"
+  },
+  "published_reference": {
+    "table": "8, Non-RD vs RD columns, UNet++ row",
+    "partition": "test",
+    "sensitivity": 0.879,
+    "specificity": 0.986,
+    "precision": 0.871,
+    "F1": 0.875,
+    "accuracy": 0.976,
+    "source": "author-reported, not our result"
+  },
+  "disclosures": [
+    "Paper says AdamW; released experiment resolves to Adam. This first attempt follows pinned code, not a silently reconciled paper protocol.",
+    "One-GPU gradient accumulation and current dependency versions must be reported as hardware/software adaptations.",
+    "Independent PyTorch blocks replace MONAI wrappers; verify parameter and numerical parity against the read-only reference.",
+    "OpenCV decoding replaces torchvision/PyAV; grayscale/interpolation parity is checked, but cross-version decoder identity is not guaranteed.",
+    "Only float32 roundoff within 1e-6 is clipped at normalization boundaries.",
+    "Paper recall decimals do not reconcile with a simple 100-positive test denominator; exact reported-table agreement is not guaranteed.",
+    "Official splits are clip-level with possible same-patient overlap; no unseen-patient or clinical-validation claim.",
+    "FP16 autocast with FP32 master parameters and GradScaler replaces reference FP32, after a real-input finite-gradient timing probe. This numerical adaptation is not bit-identical training.",
+    "Kaggle platform: two saved CPU-preparation outputs preserve all float32 inputs; GPU jobs attach them read-only.",
+    "Only CUDA device 0 is used, including on a T4 x2 allocation; this is not distributed training.",
+    "Training proceeds in saved bounded notebook jobs; completed prior output must be attached to continue.",
+    "Training starts from scratch with seed 42; no fine-tuning of the selected baseline checkpoint.",
+    "Cached preprocessing remains augmentation=none. Online training augmentation is recorded separately.",
+    "Initial proposal +/-7 degrees, +/-3% translation, scale 0.95-1.05 was reduced after training previews to +/-3 degrees, +/-1%, scale 0.98-1.02 to reduce border displacement.",
+    "Same spatial and gain parameters across all 96 positions; no temporal transforms; identical policy for both labels.",
+    "Views use a local CPU RNG keyed by seed/epoch/clip ID. Epoch comes from the training checkpoint; source arrays remain unchanged.",
+    "Mild transforms are engineering hypotheses, not established ultrasound-specific invariances; residual interpolation and border effects remain.",
+    "Single-seed comparison cannot establish a reliable augmentation benefit. No test-driven tuning."
+  ],
+  "training": {
+    "train_clips": 3873,
+    "validation_clips": 431,
+    "epochs": 50,
+    "optimizer": "Adam",
+    "learning_rate": 1.5e-05,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "weight_decay": 0.0,
+    "scheduler": "ReduceLROnPlateau(mode=min,factor=0.1,patience=10)",
+    "scheduler_monitor": "validation_loss",
+    "loss": "unweighted BCEWithLogitsLoss",
+    "class_weighting": false,
+    "resampling": false,
+    "physical_batch": 4,
+    "gradient_accumulation": 12,
+    "precision": "16-mixed",
+    "deterministic_algorithms": false,
+    "checkpoint_selection": "highest validation accuracy; earliest on ties",
+    "effective_batch": 48,
+    "checkpoint_every_updates": 10
+  },
+  "platform": "kaggle",
+  "comparison_reference": "unetpp_rd_002_amp",
+  "protocol": "docs/AUGMENTATION_EXPLAINABILITY_PLAN.md",
+  "training_augmentation": {
+    "version": 1,
+    "affine_probability": 0.5,
+    "rotation_degrees": 3.0,
+    "translation_fraction": 0.01,
+    "scale_range": [
+      0.98,
+      1.02
+    ],
+    "gain_probability": 0.5,
+    "gain_range": [
+      0.9,
+      1.1
+    ],
+    "order": [
+      "affine",
+      "gain"
+    ],
+    "interpolation": "bilinear",
+    "padding_mode": "zeros",
+    "align_corners": false,
+    "clamp_range": [
+      0.0,
+      1.0
+    ],
+    "temporal_policy": "one parameter set for all temporal positions; preserve order",
+    "rng": "sha256(video_augmentation_v1:seed:epoch:clip_id), first 8 bytes, 63-bit CPU torch.Generator"
+  },
+  "reference_runtime": {
+    "python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]",
+    "torch": "2.11.0+cu128",
+    "numpy": "2.1.3",
+    "opencv": "4.14.0",
+    "pandas": "2.3.3",
+    "sklearn": "1.6.1",
+    "huggingface_hub": "1.29.0",
+    "cuda": "12.8",
+    "cudnn": 91900,
+    "gpu": "Tesla T4",
+    "cpu_torch_threads": 2,
+    "cudnn_benchmark": false,
+    "matmul_tf32": false,
+    "cudnn_tf32": false
+  },
+  "reference_implementation_sha256": {
+    "unetpp_baseline": "5180b7022ecd54f3319fa0d780a992c95fa404a5ce8dbae15766db24eef3c5ed",
+    "unetpp_training": "7bc8a073d45e08a4c6d24595508be65f9596dbc50500f6dc6799bdc23d7fe2e1",
+    "unetpp_data": "e6e186ed51bd5b33260e09b7b7b64caea23f28103bbdcd3749125b44c30feb61",
+    "unetpp_kaggle": "fc39badd5f9e20377e3c3052200bf188df8e9c98ccd6a5ef5a1278cf14c5013d"
+  },
+  "cache": {
+    "preparation_experiment_id": "unetpp_rd_002_amp",
+    "preparation_config_digest": "6907d5f903b39b83ca61ae2ab96a1f2b8b18078f3cab6d9ad614438597fb689f",
+    "expected_cache_fingerprint": "111e9cb7b1163c3be3b4a3dd2374f80434c402aad65168844cfcbb1087187ab0"
+  },
+  "preview": {
+    "clip_ids": [
+      "164267_03674",
+      "164267_02201",
+      "825315_00216",
+      "825315_00468",
+      "102769_00077",
+      "258033_00019",
+      "755384_00079",
+      "405744_00139"
+    ],
+    "policy_digest": "f6baf624e9eae6468829b324355456241a72ab122de3934178ba57b3236a395b",
+    "manifest_sha256": "11a8ec30738c5384a5c982b9752a3cec6f1594a5c4e3301ca35b8f12080c9b7e",
+    "review": "sampled and combined-boundary training panels inspected; tighter bounds reduce border displacement; not clinical validation"
+  }
+}
