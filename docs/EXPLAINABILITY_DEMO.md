@@ -1,7 +1,37 @@
 # Show the Grad-CAM results in class
 
-The Kaggle run completed for both models and all eight fixed validation clips.
-You can present saved results without running Python, Kaggle or inference live.
+Updated 2026-11-22. **The default demo now contains three frozen models**:
+U-Net++ epoch 48, R(2+1)D-18 epoch 15 and R3D-18 epoch 18, on the same eight
+fixed validation clips. You can present saved results without running Python,
+Kaggle or inference live. The original two-model artifacts remain preserved.
+
+The R3D extension passed all 127 artifact hashes and 40 attribution-array checks;
+the original 225 hashes were rechecked. The combined viewer retains source
+provenance for all 352 artifacts. See
+[the R3D execution/audit report](R3D18_EXPLAINABILITY_RESULTS.md).
+
+Real three-model offline Chromium checks passed all eight clips, four views and
+96 media loads, with zero JavaScript errors. All views fit without page scrolling
+at 1024×600, 1024×768, 1280×720, 1366×768, 1440×900 and 1920×1080. Five
+smaller/shorter sizes, including 320- and 390-pixel widths, have no horizontal
+overflow. Previous/Next, boundaries, keyboard shortcuts, fullscreen, Notes/checks
+panels and missing-image recovery passed. Screenshots were visually inspected.
+Evidence and the executed browser script are under ignored
+`outputs/presentation/demo_checks/three_model_20261122/`.
+
+The default entry remains `outputs/presentation/gradcam_demo/index.html`, with
+portable `gradcam_demo.zip`. Its 99 files were byte-checked against the ZIP; all
+64 historical media files are unchanged. The previous viewer and ZIP are kept as
+`gradcam_demo_two_models_20261118/` and `gradcam_demo_two_models_20261118.zip`.
+The separately built new bundle is also retained as `gradcam_demo_three_models/`.
+
+On `405744_00014`, R3D-18 detects RD at **86.80%** alongside R(2+1)D-18; on
+`102769_00005` it misses RD at **39.13%**. These are FP32 explanation scores,
+not calibrated clinical risks. GIFs may loop independently; use the still-frame
+panels for comparison at matched resampled indices. Physical projectors, touch
+gestures, Firefox and Safari were not tested.
+
+## Historical two-model layout verification
 
 The presentation layout was refreshed on 2026-11-18. On desktop viewports at
 least 1000 CSS pixels wide and 600 high, the clip/view selectors, navigation,
@@ -31,7 +61,7 @@ The rebuilt portable ZIP was checked against all 67 generated demo files. All
 4. Test it with Wi-Fi off. Choose **Full screen**, press **F** outside a selector,
    or use the browser's shortcut. The button changes to **Exit full screen**.
 5. Use the clip selector and View selector. Animations, original/overlay panels
-   and temporal curves are available for the same clip in both models.
+   and temporal curves are available for the same clip in all three models.
 6. Use **Previous / Next** or the **Left / Right arrow keys** outside selectors
    to change clips. The case counter shows your position in the fixed panel.
 7. Open **Notes** or **Explanation checks** when needed. On desktop they open
@@ -50,6 +80,7 @@ model's output.”
 
 **Show clip `405744_00014` first.** Its dataset label is RD. At the fixed 0.5
 threshold, U-Net++ misses it (RD score **0.64%**); R(2+1)D-18 detects it (**61.11%**).
+R3D-18 also detects it (**86.80%**).
 Switch to “Original + both targets” to show the original frames and separate
 positive RD/non-RD attribution maps. Say: “We can compare the predictions and
 inspect their attribution patterns. The maps do not confirm anatomical reasoning.”
@@ -88,7 +119,7 @@ Keep one overall benchmark-results slide, one Grad-CAM comparison image and one
 limitations/control slide. Panels in the demo's `assets/` folder are suitable as
 backups; the original matched panels are in the verified results folder.
 
-**Did you retrain for this?** No. U-Net++ epoch 48 and R(2+1)D-18 epoch 15 were
+**Did you retrain for this?** No. U-Net++ epoch 48, R(2+1)D-18 epoch 15 and R3D-18 epoch 18 were
 already selected. Explanations use gradients without weight updates.
 
 **Are these segmentation masks?** No. Grad-CAM provides coarse score attribution.
@@ -108,7 +139,7 @@ with attribution overlays. Playback speed does not reproduce acquisition timing.
 ## Rebuild the portable viewer
 
 ```bash
-uv --cache-dir /tmp/dmml-uv-cache run python scripts/build_explainability_demo.py --archive outputs/kaggle_results/gradcam_validation_001/gradcam_validation_001.zip --output outputs/presentation/gradcam_demo
+uv --cache-dir /tmp/dmml-uv-cache run python scripts/build_explainability_demo.py --archive outputs/kaggle_results/gradcam_validation_001/gradcam_validation_001.zip --additional-archive outputs/kaggle_results/gradcam_r3d18_validation_001/gradcam_r3d18_validation_001.zip --output outputs/presentation/new_gradcam_demo
 ```
 
 Use a new output directory if it already exists. The builder verifies all source

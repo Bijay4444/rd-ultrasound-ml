@@ -155,3 +155,13 @@ inference uses frozen weights and threshold with timing and no optimizer, the tr
 (epoch 18, threshold 0.5) matches the training sources and the U-Net++ test-input freeze, the
 notebook matches its builder, and the bundle refuses while `team_freeze_confirmed` is false. It
 never opens real test data.
+
+The 22 explanation checks (`*explainability*.py`) cover analytical Grad-CAM,
+state/hook preservation, real architecture shapes, controlled randomization,
+occlusion, PNG/GIF exports, standalone notebook/source identity and private
+bundles. `test_r3d18_explainability.py` adds the fixed historical case manifest,
+R3D-only subset guards, case-drift refusal before inference and an actual R3D
+gradient/state check. `test_explainability_demo.py` checks archive corruption,
+method drift, three-model assembly and unchanged historical display assets.
+These use synthetic CPU fixtures; real validation output verification is
+recorded separately in `docs/R3D18_EXPLAINABILITY_RESULTS.md`.

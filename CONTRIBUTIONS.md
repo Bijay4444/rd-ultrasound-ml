@@ -13,6 +13,10 @@ private; they can be shared with the instructor on request.
   (`bijaykhadka1710/unetpp-rd-002-test-inputs/1`) reused by all comparison models.
 - Model comparison protocol, augmentation/explainability plans and the model handoff assignments.
 - Unit test suites for preparation, baseline training, U-Net++ and its Kaggle/evaluation pipeline.
+- Training-only, temporally consistent U-Net++ augmentation ablation: previews, frozen policy,
+  resumable 50-epoch run, selected epoch 32, single frozen benchmark evaluation and mixed-result reporting.
+- Frozen-model validation Grad-CAM and sensitivity controls on eight fixed cases, independent saved-output
+  verification, final four-model comparison, and the offline three-model explanation viewer.
 
 ## Naman Babariya
 

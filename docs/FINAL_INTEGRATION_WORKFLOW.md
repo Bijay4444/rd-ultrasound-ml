@@ -7,8 +7,14 @@ integrates the verified R3D-18 implementation without updating remote `main` or
 
 Local integration is complete: `3f7f809` saves the prior work and merge commit
 `dd114fb` imports the peer branch with its history. All 22 imported tests pass.
-The branch still needs its first authenticated push; no remote PR or merge was
-performed. R3D-18 explanation execution is the next stage, not a completed run.
+GitHub browser sign-in is now complete and the integration branch has been
+pushed. [PR #19](https://github.com/Bijay4444/rd-ultrasound-ml/pull/19) targets
+`dev`. The R3D explanation job, saved-output audit and real three-model offline
+browser checks are complete. The final model's adapter/notebook is committed
+separately in `dc52291`; all 22 explanation/viewer tests passed. The default
+demo and portable ZIP now contain all three models, with the previous viewer
+preserved. See [the execution report](R3D18_EXPLAINABILITY_RESULTS.md).
+`main` is reserved for Bijay's later promotion of the checked `dev` branch.
 
 ## Order of work
 
@@ -125,5 +131,7 @@ Temporary test artifacts stay ignored; no training implementation was changed
 to accommodate the local storage limit. Exact merged freeze and frozen training hashes match the
 previously downloaded and audited Kaggle snapshot. `git diff --cached --check`
 passed, as did compilation of the imported Python files. The full unrelated
-repository suite was not rerun. This workflow does not rerun GPU training, test
-inference or Grad-CAM.
+repository suite was not rerun. The subsequent Grad-CAM extension completed
+eight fixed validation cases; no new training or official-test inference ran.
+The default viewer passed real offline Chromium checks on all 24 model/case
+pairs and four views. Promotion uses `dev`; `main` remains the user's later step.
